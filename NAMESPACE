@@ -1,0 +1,8 @@
+export(count)
+export(depth)
+export(getSignal)
+export(pileup)
+import(GenomicRanges)
+import(IRanges)
+import(Rcpp)
+useDynLib(bamsignals)

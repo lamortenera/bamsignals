@@ -1,0 +1,4 @@
+- fill man/bamsignals-package.Rd
+- write correct tests in ./tests which are run when "R CMD check bamsignals" is executed
+
+- check "R CMD check bamsignals" output
