@@ -16,4 +16,6 @@ Imports:
     Rcpp (>= 0.10.6),
     IRanges,
     GenomicRanges
+Suggests:
+	testthat (>= 0.9)
 LinkingTo: Rcpp
