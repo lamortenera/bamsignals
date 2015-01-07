@@ -23,7 +23,7 @@ NULL
 #' @param gr GenomicRanges object used to specify the regions
 #' @param bampath path to the bam file storing the read. The file must be indexed. 
 #' If a range is on the negative strand the profile will be reverse-complemented.
-#' @param If the value is set to 1, the method will return basepair-resolution read densities,
+#' @param binsize If the value is set to 1, the method will return basepair-resolution read densities,
 #' for bigger values the density profiles will be binned (and the memory requirements
 #' will scale accordingly). 
 #' @param mapqual discard reads with mapping quality strictly lower than this parameter.
@@ -48,6 +48,7 @@ NULL
 #' @param paired.end.max.frag.length an integer indicating which fragments should be 
 #' considered in paired-end sequencing data. Default value of 1,000 bases is generally
 #' a good pick.
+#' @param verbose a logical value indicating whether verbose output is desired
 #' @return a list with the following arguments:
 #' 	\item{counts}{the vector containing the read counts. This will be formatted
 #' 	into a matrix or an array depending on whether the profile is strand-specific
@@ -60,7 +61,7 @@ NULL
 #' 	differently than a simple vector and it describes the formatting.}
 #' @export
 pileup <- function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
-    	if (verbose) {
+	if (verbose) {
 		cat( "Processing ", bampath, " and ") 
 		printStupidSentence()
 	}
@@ -114,6 +115,7 @@ pileup <- function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, p
 #' @param paired.end.max.frag.length an integer indicating which fragments should be 
 #' considered in paired-end sequencing data. Default value of 1,000 bases is generally
 #' a good pick.
+#' @param verbose a logical value indicating whether verbose output is desired
 #' @return a list with the following arguments:
 #' 	\item{counts}{the vector containing the read counts. This will be formatted
 #' 	into a matrix depending on whether the ranges have all the same length.}
@@ -163,10 +165,11 @@ depth <- function(gr, bampath, mapqual=0, format=T, paired.end=F, paired.end.max
 #' @param paired.end.max.frag.length an integer indicating which fragments should be 
 #' considered in paired-end sequencing data. Default value of 1,000 bases is generally
 #' a good pick.
+#' @param verbose a logical value indicating whether verbose output is desired
 #' @return a vector or a matrix with the counts
 #' @export
 count <- function(gr, bampath, mapqual=0, shift=0, ss=F, paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
-    	if (verbose) {
+	if (verbose) {
 		cat( "Processing ", bampath, " and ") 
 		printStupidSentence()
 	}
