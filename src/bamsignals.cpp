@@ -312,7 +312,7 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 		//loop through the reads
 		while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
 
-		    if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ //only take first read in proper pair mapping + mapq threshold
+		if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ //only take first read in proper pair mapping + mapq threshold
 			int r_start = (read->core).pos;
 			//skip non-overlapping regions at the beginning
 			while (curr_range < chunk_end && r_start >= ranges[curr_range].end() + window) ++curr_range;
@@ -324,17 +324,17 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 
 			//if we want to count midpoints of the fragments we have to change r_end
 			if (pe_mid) {
-			    r_shift = r_shift + abs((read->core).isize)/2; //move counting position relative to fragment middle point
+				r_shift = r_shift + abs((read->core).isize)/2; //move counting position relative to fragment middle point
 			}
 
 			//temp
 			//Rcout << "\t FLAG: " << (read->core).flag << "___" << (read->core).tid << ":" << r_start << "-" << r_end << "; ReadLength:" << (read->core).l_qseq << "; MPOS:" << (read->core).mpos << "; ISIZE:" << abs((read->core).isize) << std::endl;
 
 			for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - window <= r_end; ++range){
-			    //Rcout << "Range No " << range << " with " << ranges[range].loc << "-" << ranges[range].end() << ", strand " << ranges[range].strand << std::endl;
-			    pileupper.pileupPairedEnd(ranges[range], read, r_start, r_end, r_shift);
+				//Rcout << "Range No " << range << " with " << ranges[range].loc << "-" << ranges[range].end() << ", strand " << ranges[range].strand << std::endl;
+				pileupper.pileupPairedEnd(ranges[range], read, r_start, r_end, r_shift);
 			}
-		    }
+		}
 
 		}
 		
