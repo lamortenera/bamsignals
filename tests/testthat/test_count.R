@@ -12,7 +12,7 @@ context("bamsignals::count()")
 binwidth <- 500
 regionlength <- 10*binwidth
 
-#1. generate list of reads
+#1. generate list of reads and sort by starting position
 readpos <- matrix( rnbinom( 2 * regionlength, 50, .99), nrow=2 )
 reads <- list()
 for (i in 1:ncol(readpos)) {
@@ -27,11 +27,13 @@ for (i in 1:ncol(readpos)) {
 		}
 	}
 }
+out <- do.call("rbind", reads)
+out <- out[ order(out[,1]),]
 
 #2. write to SAM file
-out <- do.call("rbind", reads)
-sam.file.se <- "bamsignals_SE_counts.sam"
-writeLines("@HD\tVN:1.0\tSO:coordinate\n@SQ\tSN:chr1\tLN:249250621", sam.file.se)
+dir.create("data", showWarnings=F)
+sam.file.se <- "data/bamsignals_SE_counts.sam"
+writeLines("@HD\tVN:1.0\tSO:unsorted\n@SQ\tSN:chr1\tLN:249250621", sam.file.se)
 write.table(x=cbind("*", out[,3], "chr1", out[,1], out[,4], "50M", "*", "0", "0", "*", "*"),
 			file=sam.file.se,
 			sep="\t",
@@ -42,7 +44,7 @@ write.table(x=cbind("*", out[,3], "chr1", out[,1], out[,4], "50M", "*", "0", "0"
 			)
 
 #3. SAM -> BAM, BAM->BAMi
-bamsignals:::writeSamAsBam(sam.file.se, "bamsignals_SE_counts.bam")
+bamsignals:::writeSamAsBamAndIndex(sam.file.se, "data/bamsignals_SE_counts.bam")
 
 #
 # Test cases
