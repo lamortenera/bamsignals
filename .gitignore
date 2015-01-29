@@ -5,3 +5,5 @@
 #R history
 .Rhistory
 
+#Rcpp generated files
+RcppExports.*
