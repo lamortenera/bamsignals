@@ -1,4 +1,4 @@
-setClass( "ConcatCounts", 
+setClass( "CountSignals", 
 	representation = representation( 
 		counts = "integer",
 		starts = "integer",
@@ -6,7 +6,7 @@ setClass( "ConcatCounts",
 		ss = "logical" )
 )
 
-setValidity( "ConcatCounts", function( x ) {
+setValidity( "CountSignals", function( x ) {
 	if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
 	if (length(x@starts) != length(x@ends)) return("starts and ends don't match")
 	if (any(x@ends - x@starts < 0)) return("negative ranges are not allowed")
@@ -19,11 +19,11 @@ setValidity( "ConcatCounts", function( x ) {
 	TRUE
 })
 
-setMethod("length", "ConcatCounts", function(x) length(x@starts))
+setMethod("length", "CountSignals", function(x) length(x@starts))
 
 setMethod(
 	f = "[", 
-	signature = "ConcatCounts",
+	signature = "CountSignals",
 	definition = function(x, i, j, ..., drop){
 		if (!missing(j) || length(list(...)) > 0L)
 			stop("invalid subsetting")
@@ -61,12 +61,12 @@ setMethod(
 		}
 		
 		#return new s4 object
-		new("ConcatCounts", counts=ncounts, starts=nstarts, ends=nends, ss=x@ss)
+		new("CountSignals", counts=ncounts, starts=nstarts, ends=nends, ss=x@ss)
 	}
 )
 
 
-setMethod("as.list", "ConcatCounts",
+setMethod("as.list", "CountSignals",
 	function(x, ...){
 		if (length(list(...)) > 0) stop("unrecognized options")
 		l <- list()
@@ -76,7 +76,7 @@ setMethod("as.list", "ConcatCounts",
 )
 
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
-setMethod("alignSignals", "ConcatCounts",
+setMethod("alignSignals", "CountSignals",
 	function(x){
 		lens <- x@ends - x@starts
 		if (any(lens[1] != lens)) stop("all signals must have the same length")
@@ -102,8 +102,8 @@ showCounts <- function(v){
 	res
 }
 
-setMethod("show", "ConcatCounts", function(x){
-	cat("ConcatCounts object with ", length(x), ifelse(x@ss, " strand-specific", ""), 
+setMethod("show", "CountSignals", function(x){
+	cat("CountSignals object with ", length(x), ifelse(x@ss, " strand-specific", ""), 
 	" signal", ifelse(length(x)!=1, "s", ""), fill=T, sep="")
 	
 	if (length(x) == 0) return()
