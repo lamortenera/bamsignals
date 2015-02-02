@@ -73,7 +73,7 @@ pileup <- function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, p
 	}
 
 	pu <- pileup_core(gr, bampath, mapqual, binsize, shift, ss, paired.end, paired.end.midpoint, paired.end.max.frag.length)
-	new("CountSignals", counts=pu$counts, starts=pu$starts, ends=pu$ends, ss=ss)
+	new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
 }
 
 #' Compute read depth (or read coverage) from a bam file.
@@ -110,7 +110,7 @@ depth <- function(gr, bampath, mapqual=0, format=T, paired.end=F, paired.end.max
 		printStupidSentence()
 	}
 	pu <- coverage_core(gr, bampath, mapqual, paired.end, paired.end.max.frag.length)
-	new("CountSignals", counts=pu$counts, starts=pu$starts, ends=pu$ends, ss=F)
+	new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
 }
 
 #' Count reads from a bam file.

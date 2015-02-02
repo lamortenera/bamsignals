@@ -1,25 +1,23 @@
 setClass( "CountSignals", 
 	representation = representation( 
 		counts = "integer",
-		starts = "integer",
-		ends = "integer",
+		breaks = "integer",
 		ss = "logical" )
 )
 
 setValidity( "CountSignals", function( x ) {
 	if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
-	if (length(x@starts) != length(x@ends)) return("starts and ends don't match")
-	if (any(x@ends - x@starts < 0)) return("negative ranges are not allowed")
-	len <- length(x@starts)
+	len <- length(x@breaks)-1
+	if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) return("breaks first element must be 0 and the last must be length(x@counts)")
 	if (len > 0){
-		if (any(x@starts[2:len] != x@ends[1:(len-1)]+1)) return("starts and ends don't match")
-		if (x@ss && any((x@ends-x@starts) %% 2 == 0)) return("odd number of elements in a strand-specific signal...")
-		if (x@starts[1] != 1 || x@ends[len] != length(x@counts)) return("invalid starts or ends slot")
+		d <- diff(x@breaks)
+		if (any(d) < 0) return("breaks must be increasing numbers")
+		if (x@ss && any(d %% 2 == 1)) return("odd number of elements in a strand-specific signal...")
 	}
 	TRUE
 })
 
-setMethod("length", "CountSignals", function(x) length(x@starts))
+setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 
 setMethod(
 	f = "[", 
@@ -29,26 +27,24 @@ setMethod(
 			stop("invalid subsetting")
 		
 		#needs to be done in C
-		if (any(i > length(x))) stop("index out of bounds")
+		if (any(i > length(x) || i <= 0)) stop("index out of bounds")
 		
 		nlen <- length(i)
-		nstarts <- integer(nlen)
-		nends <- integer(nlen)
+		nbreaks <- integer(nlen+1)
 		#figure out starts and ends in the new vector
 		#and total amount of memory to allocate
-		acc <- 0L
+		acc <- 0L; nbreaks[1] <- acc
 		for (ii in seq_along(i)){
 			idx <- i[ii]
-			nstarts[ii] <- acc + 1L
-			acc <- acc + x@ends[idx] - x@starts[idx] + 1L
-			nends[ii] <- acc
+			acc <- acc + x@breaks[idx+1] - x@breaks[idx]
+			nbreaks[ii+1] <- acc
 		}
 		
 		#copy the subsets in a new vector
 		ncounts <- integer(acc)
 		for (ii in seq_along(i)){
 			idx <- i[ii]
-			ncounts[nstarts[ii]:nends[ii]] <- x@counts[x@starts[idx]:x@ends[idx]]
+			ncounts[(nbreaks[ii]+1):nbreaks[ii+1]] <- x@counts[(x@breaks[idx]+1):x@breaks[idx+1]]
 		}
 		
 		#deal with the drop option
@@ -61,7 +57,7 @@ setMethod(
 		}
 		
 		#return new s4 object
-		new("CountSignals", counts=ncounts, starts=nstarts, ends=nends, ss=x@ss)
+		new("CountSignals", counts=ncounts, breaks=nbreaks, ss=x@ss)
 	}
 )
 
@@ -78,7 +74,7 @@ setMethod("as.list", "CountSignals",
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
 setMethod("alignSignals", "CountSignals",
 	function(x){
-		lens <- x@ends - x@starts
+		lens <- diff(x@breaks)
 		if (any(lens[1] != lens)) stop("all signals must have the same length")
 		lastDim <- length(x)
 		firstDims <- length(x@counts)/lastDim
