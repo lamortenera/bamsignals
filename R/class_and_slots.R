@@ -70,7 +70,7 @@ setMethod("as.list", "ConcatCounts",
 	function(x, ...){
 		if (length(list(...)) > 0) stop("unrecognized options")
 		l <- list()
-		for (i in seq_along(prova)) l[[i]] <- prova[i]
+		for (i in seq_along(x)) l[[i]] <- x[i]
 		l
 	}
 )
