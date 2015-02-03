@@ -84,16 +84,16 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
-// writeSamAsBam
-bool writeSamAsBam(const std::string& sampath, const std::string& bampath);
-RcppExport SEXP bamsignals_writeSamAsBam(SEXP sampathSEXP, SEXP bampathSEXP) {
+// writeSamAsBamAndIndex
+bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath);
+RcppExport SEXP bamsignals_writeSamAsBamAndIndex(SEXP sampathSEXP, SEXP bampathSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
         Rcpp::RNGScope __rngScope;
         Rcpp::traits::input_parameter< const std::string& >::type sampath(sampathSEXP );
         Rcpp::traits::input_parameter< const std::string& >::type bampath(bampathSEXP );
-        bool __result = writeSamAsBam(sampath, bampath);
+        bool __result = writeSamAsBamAndIndex(sampath, bampath);
         PROTECT(__sexp_result = Rcpp::wrap(__result));
     }
     UNPROTECT(1);
