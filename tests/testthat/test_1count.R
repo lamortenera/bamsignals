@@ -10,8 +10,20 @@ context("bamsignals::count()")
 # Test cases
 #
 test_that("Test that count works for Single End Data", {
-		  #gr <- GRanges(seqnames="chr1", ranges=IRanges(start=1:300,end=bed[[3]]), strand=bed[[6]])
-		  #TODO continue here with counting from bamfile and comparing to readpos infered counts
+		  starts <- seq(3000001, 3025000, 500)
+		  ends <- starts+499
+		  gr <- GRanges(seqnames="chr1", ranges=IRanges(start=starts,end=ends), strand="*")
+
+		  bampath <- "data/bamsignals_SE_counts.bam"
+
+		  count.unstranded      <- bamsignals::count(gr, bampath, ss=F)
+		  count.stranded        <- bamsignals::count(gr, bampath, ss=T)
+		  count.shift           <- bamsignals::count(gr, bampath, shift=100, ss=F)
+		  count.qual            <- bamsignals::count(gr, bampath, mapqual=40, ss=F)
+
+		  load("data/bamsignals_SE_counts.RData") #readpos, reads
+
+
 
 })
 
@@ -23,22 +35,13 @@ test_that("Test that count works for Paired End Data", {
 #
 ## Single End data
 #bampath <- "data/Toy_SE.bam"
-#
-## Count with bamsignals
-#count.unstranded      <- count(gr, bampath, ss=F)
-#count.stranded        <- count(gr, bampath, ss=T)
-#count.shift           <- count(gr, bampath, shift=100, ss=F)
-#count.qual            <- count(gr, bampath, mapqual=40, ss=F)
-#
-## Compare to truth
-#bedtools.Toy_SE <- read.delim("data/Toy_SE.counts", header=T)
-#
 #all( count.unstranded == bedtools.Toy_SE$FivePrime_count )
 #all( count.stranded[1,] == bedtools.Toy_SE$FivePrime_count_sense )
 #all( count.stranded[2,] == bedtools.Toy_SE$FivePrime_count_antisense )
 #all( count.shift == bedtools.Toy_SE$FivePrime_count_100_shift )
 #all( count.qual == bedtools.Toy_SE$FivePrime_count_min40qual )
 #
+## Count with bamsignals
 ## Paired End data
 #bampath <- "data/Toy_PE.bam"
 #
