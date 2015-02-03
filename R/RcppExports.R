@@ -17,7 +17,7 @@ countInSubset <- function(counts, start, width) {
     .Call('bamsignals_countInSubset', PACKAGE = 'bamsignals', counts, start, width)
 }
 
-writeSamAsBam <- function(sampath, bampath) {
-    .Call('bamsignals_writeSamAsBam', PACKAGE = 'bamsignals', sampath, bampath)
+writeSamAsBamAndIndex <- function(sampath, bampath) {
+    .Call('bamsignals_writeSamAsBamAndIndex', PACKAGE = 'bamsignals', sampath, bampath)
 }
 
