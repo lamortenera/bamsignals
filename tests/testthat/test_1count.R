@@ -35,6 +35,16 @@ test_that("Test that count works for Paired End Data", {
 #
 ## Single End data
 #bampath <- "data/Toy_SE.bam"
+#
+## Count with bamsignals
+#count.unstranded      <- count(gr, bampath, ss=F)
+#count.stranded        <- count(gr, bampath, ss=T)
+#count.shift           <- count(gr, bampath, shift=100, ss=F)
+#count.qual            <- count(gr, bampath, mapqual=40, ss=F)
+#
+## Compare to truth
+#bedtools.Toy_SE <- read.delim("data/Toy_SE.counts", header=T)
+#
 #all( count.unstranded == bedtools.Toy_SE$FivePrime_count )
 #all( count.stranded[1,] == bedtools.Toy_SE$FivePrime_count_sense )
 #all( count.stranded[2,] == bedtools.Toy_SE$FivePrime_count_antisense )
