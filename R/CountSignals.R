@@ -5,73 +5,56 @@ setClass( "CountSignals",
 		ss = "logical" )
 )
 
-setValidity( "CountSignals", function( x ) {
-	if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
-	len <- length(x@breaks)-1
-	if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) return("breaks first element must be 0 and the last must be length(x@counts)")
-	if (len > 0){
-		d <- diff(x@breaks)
-		if (any(d) < 0) return("breaks must be increasing numbers")
-		if (x@ss && any(d %% 2 == 1)) return("odd number of elements in a strand-specific signal...")
-	}
-	TRUE
-})
 
+setValidity( "CountSignals", 
+	function(object) {
+		x <- object
+		if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
+		len <- length(x@breaks)-1
+		if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) return("breaks first element must be 0 and the last must be length(x@counts)")
+		if (len > 0){
+			d <- diff(x@breaks)
+			if (any(d) < 0) return("breaks must be increasing numbers")
+			if (x@ss && any(d %% 2 == 1)) return("odd number of elements in a strand-specific signal...")
+		}
+		TRUE
+	}
+)
+
+#' @export
 setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 
-setMethod(
-	f = "[", 
-	signature = "CountSignals",
-	definition = function(x, i, j, ..., drop){
+#' @export
+setMethod("width", "CountSignals", function(x) fastWidth(x))
+
+
+#' @export
+setMethod("[", "CountSignals", 
+	function(x, i, j, ..., drop){
 		if (!missing(j) || length(list(...)) > 0L)
 			stop("invalid subsetting")
 		
-		#needs to be done in C
-		if (any(i > length(x) || i <= 0)) stop("index out of bounds")
-		
-		nlen <- length(i)
-		nbreaks <- integer(nlen+1)
-		#figure out starts and ends in the new vector
-		#and total amount of memory to allocate
-		acc <- 0L; nbreaks[1] <- acc
-		for (ii in seq_along(i)){
-			idx <- i[ii]
-			acc <- acc + x@breaks[idx+1] - x@breaks[idx]
-			nbreaks[ii+1] <- acc
-		}
-		
-		#copy the subsets in a new vector
-		ncounts <- integer(acc)
-		for (ii in seq_along(i)){
-			idx <- i[ii]
-			ncounts[(nbreaks[ii]+1):nbreaks[ii+1]] <- x@counts[(x@breaks[idx]+1):x@breaks[idx+1]]
-		}
-		
-		#deal with the drop option
 		if (length(i)==1 && drop){
-			if (x@ss){
-				dim(ncounts) <- c(2, length(ncounts)/2)
-				rownames(ncounts) <- c("sense", "antisense")
-			}
-			return(ncounts)
-		}
+			if (x@ss) return(getMatrix(x, i))
+			else         return(getVector(x, i))
+		} 
 		
-		#return new s4 object
-		new("CountSignals", counts=ncounts, breaks=nbreaks, ss=x@ss)
+		largs <- getSubset(x, as.integer(i))
+		new("CountSignals", counts=largs$counts, breaks=largs$breaks, ss=largs$ss)
 	}
 )
 
-
+#' @export
 setMethod("as.list", "CountSignals",
 	function(x, ...){
 		if (length(list(...)) > 0) stop("unrecognized options")
-		l <- list()
-		for (i in seq_along(x)) l[[i]] <- x[i]
-		l
+		asList(x)
 	}
 )
 
+#' @export
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
+#' @export
 setMethod("alignSignals", "CountSignals",
 	function(x){
 		lens <- diff(x@breaks)
@@ -88,7 +71,8 @@ setMethod("alignSignals", "CountSignals",
 			dim(ret) <- c(firstDims, lastDim)
 			ret
 		}
-})
+	}
+)
 
 
 showCounts <- function(v){
@@ -98,7 +82,7 @@ showCounts <- function(v){
 	res
 }
 
-setMethod("show", "CountSignals", function(x){
+showCountSignals <- function(x){
 	cat("CountSignals object with ", length(x), ifelse(x@ss, " strand-specific", ""), 
 	" signal", ifelse(length(x)!=1, "s", ""), fill=T, sep="")
 	
@@ -107,7 +91,7 @@ setMethod("show", "CountSignals", function(x){
 	for (i in 1:min(5, length(x))){
 		el <- x[i]
 		npos <- ifelse(x@ss, ncol(el), length(el))
-		cat("[",i, "] signal of length ", npos, fill=T, sep="")
+		cat("[",i, "] signal of width ", npos, fill=T, sep="")
 		if (x@ss){
 			cat("sense      ", showCounts(el[1,]), sep="", fill=T)
 			cat("antisense  ", showCounts(el[2,]), sep="", fill=T)
@@ -115,4 +99,7 @@ setMethod("show", "CountSignals", function(x){
 	}
 	if (length(x)>5)
 	cat("....", fill=T)
-})
+}
+
+#' @export
+setMethod("show", "CountSignals", function(object) showCountSignals(object))
