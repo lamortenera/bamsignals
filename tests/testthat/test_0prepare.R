@@ -56,6 +56,9 @@ test_that("Artifical Data generation for single end data on chr1", {
 		  #3. SAM -> BAM, BAM->BAMi
 		  bamsignals:::writeSamAsBamAndIndex(sam.file.se, "data/bamsignals_SE_counts.bam")
 
+		  #4. Save the read information for tests
+		  save(readpos, reads, file="data/bamsignals_SE_counts.RData")
+
 		  expect_true( file.exists( "data/bamsignals_SE_counts.sam" ), label="Artifical single end sam file successfully created")
 		  expect_true( file.exists( "data/bamsignals_SE_counts.bam" ), label="Artifical single end bam file successfully created")
 		  expect_true( file.exists( "data/bamsignals_SE_counts.bam.bai" ), label="Artifical single end bam file successfully indexed")
@@ -127,6 +130,9 @@ test_that("Artifical Data generation for paired end data on chr1", {
 
 		  #3. SAM -> BAM, BAM->BAMi
 		  bamsignals:::writeSamAsBamAndIndex(sam.file.se, "data/bamsignals_PE_counts.bam")
+
+		  #4. Save the read information for tests
+		  save(readpos, reads, file="data/bamsignals_PE_counts.RData")
 
 		  expect_true( file.exists( "data/bamsignals_PE_counts.sam" ), label="Artifical paired end sam file successfully created")
 		  expect_true( file.exists( "data/bamsignals_PE_counts.bam" ), label="Artifical paired end bam file successfully created")
