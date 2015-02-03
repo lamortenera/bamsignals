@@ -5,5 +5,3 @@
 #R history
 .Rhistory
 
-#Tests data
-tests/testthat/data
