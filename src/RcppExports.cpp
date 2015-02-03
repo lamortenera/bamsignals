@@ -5,6 +5,84 @@
 
 using namespace Rcpp;
 
+// getMatrix
+Rcpp::IntegerMatrix getMatrix(Rcpp::RObject csig, int idx);
+RcppExport SEXP bamsignals_getMatrix(SEXP csigSEXP, SEXP idxSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< Rcpp::RObject >::type csig(csigSEXP );
+        Rcpp::traits::input_parameter< int >::type idx(idxSEXP );
+        Rcpp::IntegerMatrix __result = getMatrix(csig, idx);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
+// getVector
+Rcpp::IntegerVector getVector(Rcpp::RObject csig, int idx);
+RcppExport SEXP bamsignals_getVector(SEXP csigSEXP, SEXP idxSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< Rcpp::RObject >::type csig(csigSEXP );
+        Rcpp::traits::input_parameter< int >::type idx(idxSEXP );
+        Rcpp::IntegerVector __result = getVector(csig, idx);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
+// getSubset
+Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs);
+RcppExport SEXP bamsignals_getSubset(SEXP csigSEXP, SEXP idxsSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< Rcpp::RObject >::type csig(csigSEXP );
+        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type idxs(idxsSEXP );
+        Rcpp::List __result = getSubset(csig, idxs);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
+// asList
+Rcpp::List asList(Rcpp::RObject csig);
+RcppExport SEXP bamsignals_asList(SEXP csigSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< Rcpp::RObject >::type csig(csigSEXP );
+        Rcpp::List __result = asList(csig);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
+// fastWidth
+Rcpp::IntegerVector fastWidth(Rcpp::RObject csig);
+RcppExport SEXP bamsignals_fastWidth(SEXP csigSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< Rcpp::RObject >::type csig(csigSEXP );
+        Rcpp::IntegerVector __result = fastWidth(csig);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
 // pileup_core
 List pileup_core(RObject gr, std::string bampath, int mapqual = 0, int binsize = 1, int shift = 0, bool ss = false, bool pe = false, bool pe_mid = false, int maxfraglength = 1000, int maxgap = 16385);
 RcppExport SEXP bamsignals_pileup_core(SEXP grSEXP, SEXP bampathSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP peSEXP, SEXP pe_midSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP) {
