@@ -29,14 +29,6 @@ coverage_core <- function(gr, bampath, mapqual = 0L, pe = FALSE, maxfraglength =
     .Call('bamsignals_coverage_core', PACKAGE = 'bamsignals', gr, bampath, mapqual, pe, maxfraglength, maxgap)
 }
 
-subsetCounts <- function(counts, start, width, strand) {
-    .Call('bamsignals_subsetCounts', PACKAGE = 'bamsignals', counts, start, width, strand)
-}
-
-countInSubset <- function(counts, start, width) {
-    .Call('bamsignals_countInSubset', PACKAGE = 'bamsignals', counts, start, width)
-}
-
 writeSamAsBam <- function(sampath, bampath) {
     .Call('bamsignals_writeSamAsBam', PACKAGE = 'bamsignals', sampath, bampath)
 }

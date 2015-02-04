@@ -6,7 +6,7 @@
 \alias{bamsignals-package}
 \title{Efficient counting of reads in a bam files}
 \description{
-Functions for extracting signals from a bam file. Differently than the other packages,
+Functions and classes for extracting signals from a bam file. Differently than the other packages,
 this package cannot be used to import reads in R.
 All the read-processing is done in C/C++ and the only output are read counts.
 }
@@ -14,5 +14,9 @@ All the read-processing is done in C/C++ and the only output are read counts.
 Alessandro Mammana \email{mammana@molgen.mpg.de}
 
 Johannes Helmuth \email{helmuth@molgen.mpg.de}
+}
+\seealso{
+\code{\link{bamsignals-methods}} for the functions and \code{\link{CountSignals}}
+for the class
 }
 

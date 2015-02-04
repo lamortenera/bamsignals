@@ -1,3 +1,21 @@
+#' Container for count signals
+#'
+#' This is usually the output of the methods in the bamsignals package. 
+#' Among other things the container provides an accessor method, 
+#' that returns single signals as vectors and matrices, and the 
+#' methods \code{as.list} and \code{alignSignals}, that convert the 
+#' container to a list or an array/matrix respectively. A CountSignals
+#' object is read-only, i.e. it cannot be modified.
+#'
+#' @slot counts An integer vector containing all the concatenated signals
+#' @slot breaks An integer vector such that signal i corresponds to the 
+#' counts \code{counts[(breaks[i]+1):breaks[i+1]]}
+#' @slot ss A single boolean value indicating whether all
+#'	 signals are strand-specific or not
+#' @aliases CountSignals
+#' @seealso \code{\link{bamsignals-methods}} for the functions that produce 
+#' this object
+#' @export
 setClass( "CountSignals", 
 	representation = representation( 
 		counts = "integer",
@@ -21,13 +39,26 @@ setValidity( "CountSignals",
 	}
 )
 
+#' @describeIn CountSignals Number of contained signals
+#' @aliases length
 #' @export
 setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 
+#' @describeIn CountSignals Width of each signal. If the CountSignals
+#' object \code{csig} is strand-specific then \code{width(csig)[i] = ncol(csig[i])},
+#' otherwise \code{width(csig)[i] = length(csig[i])}.
+#' @aliases width
 #' @export
 setMethod("width", "CountSignals", function(x) fastWidth(x))
 
-
+#' @describeIn CountSignals Access single signals or subset the CountSignals object.
+#' If \code{i} is a single index then the accessor returns a single signal. If the CountSignals
+#' object is strand-specific then a single signal is a matrix with two rows, the first
+#' for the sense, the second for the antisense strand. Otherwise a signle signal is
+#' simply a vector of integers. If \code{i} is a vector of length different than 1, then
+#' the acessor returns a subset of the CountSignals object. Invalid indices result into
+#' errors.
+#' @aliases [
 #' @export
 setMethod("[", "CountSignals", 
 	function(x, i, j, ..., drop){
@@ -44,6 +75,9 @@ setMethod("[", "CountSignals",
 	}
 )
 
+#' @describeIn CountSignals Converts the container to a list \code{l} such that
+#' \code{l[[i]]} is the i-th signal.
+#' @aliases as.list
 #' @export
 setMethod("as.list", "CountSignals",
 	function(x, ...){
@@ -54,6 +88,12 @@ setMethod("as.list", "CountSignals",
 
 #' @export
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
+#' @describeIn CountSignals Convert to a matrix or to an array. This is only
+#' possible if all signals have the same width \code{w}. If the CountSignals
+#' object \code{csig} is strand-specific, the result is an array of dimensions 
+#' \code{[2, w, length(csig)]}, otherwise it will be a matrix of dimensions
+#' \code{[w, length(csig)]}.
+#' @aliases alignSignals
 #' @export
 setMethod("alignSignals", "CountSignals",
 	function(x){
@@ -101,5 +141,6 @@ showCountSignals <- function(x){
 	cat("....", fill=T)
 }
 
+#' @describeIn CountSignals Show a nice summary of the object
 #' @export
 setMethod("show", "CountSignals", function(object) showCountSignals(object))
