@@ -73,29 +73,7 @@ pileup <- function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, p
 	}
 
 	pu <- pileup_core(gr, bampath, mapqual, binsize, shift, ss, paired.end, paired.end.midpoint, paired.end.max.frag.length)
-	
-	if (format){
-		if (all(width(gr)==width(gr[1]))){
-			locus_width = width(gr)[1]/binsize
-			if (ss){
-				d <- c(2, locus_width, length(gr))
-				pu$counts <- array(pu$counts, dim=d, dimnames=list(c("sense","antisense"), NULL, NULL))
-				pu$format <- c("strand-offset-index") 
-			}
-			else {
-				d <- c(locus_width, length(gr))
-				pu$counts <- matrix(pu$counts, ncol=length(gr), nrow=locus_width, byrow=F)
-				pu$format <- c("offset-index") 
-			}
-			
-			
-		} else if (ss){
-			d <- c(2, length(pu$counts)/2)
-			pu$counts <- matrix(pu$counts, nrow=2, byrow=F, dimnames=list(c("sense", "antisense"), NULL))
-			pu$format <- c("strand-position") 
-		}
-	}
-	pu
+	new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
 }
 
 #' Compute read depth (or read coverage) from a bam file.
@@ -131,13 +109,8 @@ depth <- function(gr, bampath, mapqual=0, format=T, paired.end=F, paired.end.max
 		cat( "Processing ", bampath, " and ") 
 		printStupidSentence()
 	}
-	pu <- coverage_core(gr, bampath, mapqual, paired.end, paired.end.max.frag.length);
-	if (format && all(width(gr)==width(gr[1]))){
-		locus_width <- width(gr[1])
-		pu$counts <- matrix(pu$counts, ncol=length(gr), nrow=locus_width, byrow=F)
-		pu$format <- c("offset-index") 
-	}
-	pu
+	pu <- coverage_core(gr, bampath, mapqual, paired.end, paired.end.max.frag.length)
+	new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
 }
 
 #' Count reads from a bam file.
@@ -181,25 +154,6 @@ count <- function(gr, bampath, mapqual=0, shift=0, ss=F, paired.end=F, paired.en
 	return(pu$counts)
 }
 
-#' Handle the output of the \code{pileup} and \code{coverage} functions.
-#'
-#' Extract the signal corresponding to a specified range maintaining the correct formatting.
-#' @param pu output of a \code{pileup} function call
-#' @param n index of the desired range in the GenomicRanges object
-#' used in the pileup function call.
-#' @export
-getSignal <- function(pu, n){
-	f <- pu$format
-	if (is.null(f)){
-		return (pu$counts[pu$starts[n]:pu$ends[n]])
-	} else if (f=="strand-position"){
-		return(pu$counts[,((pu$starts[n]-1)/2+1):(pu$ends[n]/2)])
-	} else if (f=="offset-index"){
-		return(pu$counts[,n])
-	} else {# pu$format == "strand-offset-index"
-		return(pu$counts[,,n])
-	}
-}
 
 
 printStupidSentence <- function(){
