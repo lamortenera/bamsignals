@@ -236,16 +236,12 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<TRegion>& ranges, int m
 		}
 		int end = ranges[chunk_end-1].end() + shift;
 		//perform query
-		//Rcout << "querying: " << rid << ":" << start << "-" << end << std::endl;
-		//Rcout << "for the chunk: " << chunk_start << ":" << chunk_end << std::endl;
-		
 		bam_iter_t iter = bam_iter_query(bfile.idx, rid, start, end);
 		//all ranges behind curr_range should not overlap with the next reads anymore
 		unsigned int curr_range = chunk_start;
 		//loop through the reads
 		while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
 			if ((read->core).qual >= mapqual){
-				//++deleteme2;
 				int r_start = (read->core).pos;
 				//skip non-overlapping regions at the beginning
 				while (curr_range < chunk_end && r_start >= ranges[curr_range].end() + shift) ++curr_range;
@@ -253,7 +249,7 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<TRegion>& ranges, int m
 				if (curr_range == chunk_end) break; 
 				
 				int r_end = bam_calend(&(read->core), bam1_cigar(read)) -1;
-				
+				//go through the regions that overlap this read
 				for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - shift <= r_end; ++range){
 					pileupper.pileup(ranges[range], read, r_start, r_end);
 				}
@@ -264,7 +260,6 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<TRegion>& ranges, int m
 		bam_iter_destroy(iter);
 		processed = chunk_end;
 	}
-	//Rcout << "found: " << deleteme << " overlaps out of " << deleteme2 << " scanned reads!!!" << std::endl;
 	bam_destroy1(read);
 }
 
@@ -301,15 +296,13 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 		}
 		int end = ranges[chunk_end-1].end() + window;
 		//perform query
-		//Rcout << "QUERY: " << rid << ":" << start << "-" << end << " (chunks: " << chunk_start << ":" << chunk_end << ")" << std::endl;
-		
 		bam_iter_t iter = bam_iter_query(bfile.idx, rid, start, end); 
 		//all ranges behind curr_range should not overlap with the next reads anymore
 		unsigned int curr_range = chunk_start;
 		//loop through the reads
 		while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
-
-		if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ //only take first read in proper pair mapping + mapq threshold
+		//only take first read in proper pair mapping + mapq threshold
+		if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ 
 			int r_start = (read->core).pos;
 			//skip non-overlapping regions at the beginning
 			while (curr_range < chunk_end && r_start >= ranges[curr_range].end() + window) ++curr_range;
@@ -321,14 +314,11 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 
 			//if we want to count midpoints of the fragments we have to change r_end
 			if (pe_mid) {
-				r_shift = r_shift + abs((read->core).isize)/2; //move counting position relative to fragment middle point
+				//move counting position relative to fragment middle point
+				r_shift = r_shift + abs((read->core).isize)/2; 
 			}
-
-			//temp
-			//Rcout << "\t FLAG: " << (read->core).flag << "___" << (read->core).tid << ":" << r_start << "-" << r_end << "; ReadLength:" << (read->core).l_qseq << "; MPOS:" << (read->core).mpos << "; ISIZE:" << abs((read->core).isize) << std::endl;
-
+			//go through the regions that overlap this read
 			for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - window <= r_end; ++range){
-				//Rcout << "Range No " << range << " with " << ranges[range].loc << "-" << ranges[range].end() << ", strand " << ranges[range].strand << std::endl;
 				pileupper.pileupPairedEnd(ranges[range], read, r_start, r_end, r_shift);
 			}
 		}
@@ -492,83 +482,6 @@ List coverage_core(RObject gr, std::string bampath, int mapqual=0, bool pe=false
 	return ret;
 }
 
-void loop(std::string bampath){
-	//opening bamfile and index
-	Bamfile bfile(bampath);
-	
-	int sum = 0;
-	bam1_t* read = bam_init1();
-	
-	while (bam_read1((bfile.in)->x.bam, read) >= 0){ ++sum; }
-	Rcout << "There are " << sum << " total reads in the bam file" << std::endl;
-	
-	bam_destroy1(read);
-	bfile.close();
-}
-
-
-// [[Rcpp::export]]
-Rcpp::List subsetCounts(Rcpp::IntegerVector counts, Rcpp::IntegerVector start, Rcpp::IntegerVector width, Rcpp::LogicalVector strand){
-	if (start.length() != width.length() || start.length() != strand.length()) Rcpp::stop("provided vectors have different lengths...");
-	int nr = start.length();
-	int len = counts.length();
-	int tot = 0;
-	int* S = start.begin(); int* W = width.begin();
-	for (int i = 0; i < nr; ++i){
-		int s = S[i] - 1;
-		int w = W[i]; 
-		if (s < 0) Rcpp::stop("negative start positions are invalid");
-		if (s + w > len) Rcpp::stop("range exceeds the lengths of the counts vector");
-		tot += w;
-	}
-	
-	Rcpp::IntegerVector res(tot); 
-	Rcpp::IntegerVector nstart(nr);
-	Rcpp::IntegerVector nend(nr);
-	int* R = res.begin(); int* C = counts.begin(); int* ST = strand.begin();
-	int* NS = nstart.begin(); int* NE = nend.begin();
-	int currpos = 0;
-	for (int i = 0; i < nr; ++i){
-		NS[i] = currpos + 1;
-		int w = W[i];
-		if (ST[i]) std::copy(C + S[i]-1, C + S[i]-1 + w, R + currpos);
-		else std::reverse_copy(C + S[i]-1, C + S[i]-1 + w, R + currpos);
-		currpos += w;
-		NE[i] = currpos;
-	}
-	return List::create(_("counts")=res, _("starts")=nstart, _("ends")=nend);
-}
-
-//summing entries of a int vector 
-//with unrolled for loop for speed
-static inline int sum(int* v, int len){
-	int sum = 0;
-	int m = len % 6;
-	for (int i = 0; i < m; ++i){ sum += v[i]; }
-	for (int i = m; i < len; i += 6){
-		sum += v[i] + v[i+1] + v[i+2] + v[i+3] + v[i+4] + v[i+5];
-	}
-	return sum;
-}
-
-// [[Rcpp::export]]
-Rcpp::IntegerVector countInSubset(Rcpp::IntegerVector counts, Rcpp::IntegerVector start, Rcpp::IntegerVector width){
-	if (start.length() != width.length()) Rcpp::stop("provided vectors have different lengths...");
-	int nr = start.length();
-	int len = counts.length();
-	Rcpp::IntegerVector res(nr); 
-	int* R = res.begin(); int* C = counts.begin();
-	int* S = start.begin(); int* W = width.begin();
-	for (int i = 0; i < nr; ++i){
-		int s = S[i] - 1;
-		int w = W[i]; 
-		if (s < 0) Rcpp::stop("negative start positions are invalid");
-		if (s + w > len) Rcpp::stop("range exceeds the lengths of the counts vector");
-		R[i] = sum(C + s, w);
-	}
-	
-	return res;
-}
 
 // [[Rcpp::export]]
 bool writeSamAsBam(const std::string& sampath, const std::string& bampath) {
