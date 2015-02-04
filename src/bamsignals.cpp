@@ -144,32 +144,29 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samfile_t* in){
 static List allocateAndDistributeMemory(std::vector<GArray>& ranges, int binsize, bool ss){
 	int rnum = ranges.size();//number of ranges
 	int mult = ss?2:1;
-	int pos = 0;
 	
+	//range i will be stored in the interval breaks[i]-breaks[i+1]
+	IntegerVector breaks(rnum+1);
 	
-	IntegerVector starts(rnum);//start of each region in the returned count vector
-	IntegerVector ends(rnum);//end of each region in the returned count vector
-	
-	typedef std::vector<GArray>::iterator IGArray;
-	IGArray i_ranges = ranges.begin(); IGArray e_ranges = ranges.end();
-	Iint i_starts = starts.begin(); Iint i_ends = ends.begin();
-	for (; i_ranges < e_ranges; ++i_ranges, ++i_ends, ++i_starts){
-		*i_starts = pos+1;//in R indices are 1-indexed... 
-		pos += mult*ceil((i_ranges->len)/((double)binsize));
-		*i_ends = pos;//and intervals are right-closed
-		if (pos < 0) Rcpp::stop("Integer overflow: genomic ranges too large");
+	//compute breaks and total length
+	double dbinsize = binsize;
+	int acc = 0; 
+	breaks[0] = acc; 
+	for (int i = 0; i < rnum; ++i){
+		acc += mult*ceil(ranges[i].len/dbinsize);
+		if (acc < 0) Rcpp::stop("Integer overflow: genomic ranges too large");
+		breaks[i+1] = acc;
 	}
 	
-	IntegerVector counts(pos);
+	IntegerVector counts(acc);
 	int* countsptr = counts.begin();
 	
-	i_ranges = ranges.begin(); i_starts = starts.begin(); i_ends = ends.begin();
-	for (;i_ranges < e_ranges; ++i_ranges, ++i_ends, ++i_starts){
-		i_ranges->array = countsptr + *i_starts - 1; 
-		i_ranges->alen = *i_ends - *i_starts + 1;
+	for (int i = 0; i < rnum; ++i){
+		ranges[i].array = countsptr + breaks[i]; 
+		ranges[i].alen = breaks[i+1] - breaks[i];
 	}
 	
-	return List::create(_("counts")=counts, _("starts")=starts, _("ends")=ends);
+	return List::create(_("counts")=counts, _("breaks")=breaks, _("ss")=ss);
 }
 
 //non-standard c++ semantics. Close should be the destructor and
