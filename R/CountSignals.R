@@ -80,6 +80,7 @@ setMethod("[", "CountSignals",
 #' @aliases as.list
 #' @export
 setMethod("as.list", "CountSignals",
+	#it should be using the generic defined in BiocGenerics
 	function(x, ...){
 		if (length(list(...)) > 0) stop("unrecognized options")
 		asList(x)

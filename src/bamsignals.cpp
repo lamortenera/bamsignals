@@ -301,28 +301,27 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 		unsigned int curr_range = chunk_start;
 		//loop through the reads
 		while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
-		//only take first read in proper pair mapping + mapq threshold
-		if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ 
-			int r_start = (read->core).pos;
-			//skip non-overlapping regions at the beginning
-			while (curr_range < chunk_end && r_start >= ranges[curr_range].end() + window) ++curr_range;
-			//should never happen, unless the last reads returned by the iterator do not overlap with the queried interval
-			if (curr_range == chunk_end) break; 
+			//only take first read in proper pair mapping + mapq threshold
+			if ( isFirstInProperMappedPair( read ) && ( (read->core).qual >= mapqual) ){ 
+				int r_start = (read->core).pos;
+				//skip non-overlapping regions at the beginning
+				while (curr_range < chunk_end && r_start >= ranges[curr_range].end() + window) ++curr_range;
+				//should never happen, unless the last reads returned by the iterator do not overlap with the queried interval
+				if (curr_range == chunk_end) break; 
 
-			int r_end = bam_calend(&(read->core), bam1_cigar(read)) -1;
-			int r_shift = shift;
+				int r_end = bam_calend(&(read->core), bam1_cigar(read)) -1;
+				int r_shift = shift;
 
-			//if we want to count midpoints of the fragments we have to change r_end
-			if (pe_mid) {
-				//move counting position relative to fragment middle point
-				r_shift = r_shift + abs((read->core).isize)/2; 
+				//if we want to count midpoints of the fragments we have to change r_end
+				if (pe_mid) {
+					//move counting position relative to fragment middle point
+					r_shift = r_shift + abs((read->core).isize)/2; 
+				}
+				//go through the regions that overlap this read
+				for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - window <= r_end; ++range){
+					pileupper.pileupPairedEnd(ranges[range], read, r_start, r_end, r_shift);
+				}
 			}
-			//go through the regions that overlap this read
-			for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - window <= r_end; ++range){
-				pileupper.pileupPairedEnd(ranges[range], read, r_start, r_end, r_shift);
-			}
-		}
-
 		}
 		
 		bam_iter_destroy(iter);

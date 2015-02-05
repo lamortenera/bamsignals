@@ -8,6 +8,8 @@
 #' @import Rcpp
 #' @import IRanges
 #' @import GenomicRanges
+#' @import methods
+#' @import BiocGenerics
 #' @docType package
 #' @author Alessandro Mammana \email{mammana@@molgen.mpg.de}
 #' @author Johannes Helmuth \email{helmuth@@molgen.mpg.de}
