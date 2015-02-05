@@ -13,6 +13,8 @@ Maintainer: Alessandro Mammana <mammana@molgen.mpg.de>
 Description: Functions to quickly obtain count vectors from indexed bam files
 License: file LICENSE
 Imports:
+    methods,
+    BiocGenerics,
     Rcpp (>= 0.10.6),
     IRanges,
     GenomicRanges
