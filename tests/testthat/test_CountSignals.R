@@ -21,7 +21,7 @@ expect_runs <- function(expr){
 }
 
 test_that("Test CountSignals class and methods", {
-	for (ss in c(T,F)){
+	for (ss in c(TRUE,FALSE)){
 		n <- new("CountSignals", counts=cs, breaks=bks, ss=ss)
 
 		#see if method length works
