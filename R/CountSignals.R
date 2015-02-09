@@ -7,6 +7,11 @@
 #' container to a list or an array/matrix respectively. A CountSignals
 #' object is read-only, i.e. it cannot be modified.
 #'
+#' @param x A CountSignals object
+#' @param i Index for subsetting. It can be a single index as well as
+#' a vector of indices.
+#' @param drop In case \code{i} is a vector of length 1, after subsetting, 
+#' collapse the CountSignal object to a single signal or not.
 #' @slot counts An integer vector containing all the concatenated signals
 #' @slot breaks An integer vector such that signal i corresponds to the 
 #' counts \code{counts[(breaks[i]+1):breaks[i+1]]}
@@ -52,8 +57,8 @@ setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 setMethod("width", "CountSignals", function(x) fastWidth(x))
 
 #' @describeIn CountSignals Access single signals or subset the CountSignals object.
-#' If \code{i} is a single index then the accessor returns a single signal. If the CountSignals
-#' object is strand-specific then a single signal is a matrix with two rows, the first
+#' If \code{i} is a single index and \code{drop==TRUE} then the accessor returns a single signal. 
+#' If \code{x} is strand-specific then a single signal is a matrix with two rows, the first
 #' for the sense, the second for the antisense strand. Otherwise a signle signal is
 #' simply a vector of integers. If \code{i} is a vector of length different than 1, then
 #' the acessor returns a subset of the CountSignals object. Invalid indices result into
@@ -61,10 +66,7 @@ setMethod("width", "CountSignals", function(x) fastWidth(x))
 #' @aliases [
 #' @export
 setMethod("[", "CountSignals", 
-	function(x, i, j, ..., drop){
-		if (!missing(j) || length(list(...)) > 0L)
-			stop("invalid subsetting")
-		
+	function(x, i, drop=TRUE){
 		if (length(i)==1 && drop){
 			if (x@ss) return(getMatrix(x, i))
 			else         return(getVector(x, i))
@@ -81,10 +83,7 @@ setMethod("[", "CountSignals",
 #' @export
 setMethod("as.list", "CountSignals",
 	#it should be using the generic defined in BiocGenerics
-	function(x, ...){
-		if (length(list(...)) > 0) stop("unrecognized options")
-		asList(x)
-	}
+	function(x) asList(x)
 )
 
 #' @export
@@ -142,6 +141,4 @@ showCountSignals <- function(x){
 	cat("....", fill=T)
 }
 
-#' @describeIn CountSignals Show a nice summary of the object
-#' @export
 setMethod("show", "CountSignals", function(object) showCountSignals(object))

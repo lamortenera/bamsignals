@@ -182,7 +182,7 @@ class Bamfile {
 		samfile_t* in;
 		bam_index_t* idx;
 		//allocate memory
-		Bamfile(const std::string& bampath){
+		Bamfile(const std::string& bampath, int cache_size=10*BGZF_MAX_BLOCK_SIZE){
 			const char* cbampath = bampath.c_str();
 			in = samopen(cbampath, "rb", 0);  
 			if (in == 0) {  
@@ -194,6 +194,9 @@ class Bamfile {
 				stop("BAM indexing file is not available for file " + bampath);
 			}  
 			bam_init_header_hash(in->header);
+			if (cache_size > 0){
+				bgzf_set_cache_size(in->x.bam, cache_size);
+			}
 		}
 		//deallocate
 		void close(){
@@ -435,7 +438,8 @@ class Pileupper{
 };
 
 // [[Rcpp::export]]
-List pileup_core(RObject gr, std::string bampath, int mapqual=0, int binsize=1, int shift=0, bool ss=false, bool pe=false, bool pe_mid=false, int maxfraglength=1000, int maxgap=16385){
+List pileup_core(RObject gr, std::string bampath, int mapqual=0, int binsize=1, int shift=0, bool ss=false, 
+	bool pe=false, bool pe_mid=false, int maxfraglength=1000, int maxgap=16385){
 	std::vector<GArray> ranges;
 	//opening bamfile and index
 	Bamfile bfile(bampath);

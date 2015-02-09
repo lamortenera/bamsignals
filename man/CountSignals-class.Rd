@@ -12,7 +12,6 @@
 \alias{as.list,CountSignals-method}
 \alias{length}
 \alias{length,CountSignals-method}
-\alias{show,CountSignals-method}
 \alias{width}
 \alias{width,CountSignals-method}
 \title{Container for count signals}
@@ -21,13 +20,20 @@
 
 \S4method{width}{CountSignals}(x)
 
-\S4method{[}{CountSignals,ANY,ANY}(x, i, j, ..., drop = TRUE)
+\S4method{[}{CountSignals,ANY,ANY}(x, i, drop = TRUE)
 
-\S4method{as.list}{CountSignals}(x, ...)
+\S4method{as.list}{CountSignals}(x)
 
 \S4method{alignSignals}{CountSignals}(x)
+}
+\arguments{
+\item{x}{A CountSignals object}
 
-\S4method{show}{CountSignals}(object)
+\item{i}{Index for subsetting. It can be a single index as well as
+a vector of indices.}
+
+\item{drop}{In case \code{i} is a vector of length 1, after subsetting,
+collapse the CountSignal object to a single signal or not.}
 }
 \description{
 This is usually the output of the methods in the bamsignals package.
@@ -46,8 +52,8 @@ object \code{csig} is strand-specific then \code{width(csig)[i] = ncol(csig[i])}
 otherwise \code{width(csig)[i] = length(csig[i])}.
 
 \item \code{[}: Access single signals or subset the CountSignals object.
-If \code{i} is a single index then the accessor returns a single signal. If the CountSignals
-object is strand-specific then a single signal is a matrix with two rows, the first
+If \code{i} is a single index and \code{drop==TRUE} then the accessor returns a single signal.
+If \code{x} is strand-specific then a single signal is a matrix with two rows, the first
 for the sense, the second for the antisense strand. Otherwise a signle signal is
 simply a vector of integers. If \code{i} is a vector of length different than 1, then
 the acessor returns a subset of the CountSignals object. Invalid indices result into
@@ -61,8 +67,6 @@ possible if all signals have the same width \code{w}. If the CountSignals
 object \code{csig} is strand-specific, the result is an array of dimensions
 \code{[2, w, length(csig)]}, otherwise it will be a matrix of dimensions
 \code{[w, length(csig)]}.
-
-\item \code{show}: Show a nice summary of the object
 }}
 \section{Slots}{
 
