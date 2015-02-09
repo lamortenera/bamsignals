@@ -5,7 +5,10 @@
 	if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");\
 	Rcpp::IntegerVector counts = csig.slot("counts");\
 	Rcpp::IntegerVector breaks = csig.slot("breaks");\
-	bool ss = csig.slot("ss");\
+	bool ss = Rcpp::as<bool>(csig.slot("ss"));\  
+
+//if I don't put Rcpp::as<bool> some weid bugs show up with the clang compiler
+//with some versions of Rcpp 
 
 
 inline void checkIndex(int idx, Rcpp::IntegerVector& breaks){
