@@ -2,6 +2,7 @@
 #
 # 2015-01-28
 
+if (F){#I commented it because the test is not ready yet
 library(bamsignals)
 context("bamsignals::count()")
 
@@ -56,7 +57,7 @@ test_that("Test that count works for Single End Data", {
 test_that("Test that count works for Paired End Data", {
 
 })
-
+}
 #bed <- scan("data/regions.bed", what=list(character(), numeric(), numeric(), character(), character(), character()), skip="#")
 #
 ## Single End data

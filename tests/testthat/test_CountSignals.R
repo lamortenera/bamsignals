@@ -1,4 +1,4 @@
-context("bamsignals::CountSignals class and methods")
+context("CountSignals class and methods")
 
 cs <- 1L:16L
 bks <- c(0L, 4L, 8L, 12L, 16L)

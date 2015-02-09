@@ -68,8 +68,9 @@ setMethod("width", "CountSignals", function(x) fastWidth(x))
 setMethod("[", "CountSignals", 
 	function(x, i, drop=TRUE){
 		if (length(i)==1 && drop){
-			if (x@ss) return(getMatrix(x, i))
-			else         return(getVector(x, i))
+			if (x@ss) {
+				return(getMatrix(x, i))
+			}	else  {return(getVector(x, i))}
 		} 
 		
 		largs <- getSubset(x, as.integer(i))
