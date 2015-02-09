@@ -70,7 +70,8 @@ setGeneric("pileup", function(gr, bampath, ...) standardGeneric("pileup"))
 #' @rdname bamsignals-methods
 #' @export
 setMethod("pileup", c("GenomicRanges", "character"), 
-	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
+	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, 
+	paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
 		if (verbose) printStupidSentence(bampath)
 		
 		if (binsize < 1){

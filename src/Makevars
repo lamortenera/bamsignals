@@ -2,3 +2,5 @@ SAMVARS=$(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e \
    'cat(system.file("usretc", .Platform[["r_arch"]], \
    "Rsamtools.mk", package="Rsamtools", mustWork=TRUE))')
 include $(SAMVARS)
+
+PKG_CPPFLAGS+=-DBGZF_CACHE
