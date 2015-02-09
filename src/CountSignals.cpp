@@ -1,12 +1,19 @@
 #include <Rcpp.h>
 
-//allocates the counts, breaks and ss slots
-#define unwrapCountSignals(csig) \
-	if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");\
-	Rcpp::IntegerVector counts = csig.slot("counts");\
-	Rcpp::IntegerVector breaks = csig.slot("breaks");\
-	bool ss = Rcpp::as<bool>(csig.slot("ss"));\  
-//if I don't put Rcpp::as<bool> some weid bugs show up
+//that's the equivalent of the s4 class with the same name
+struct CountSignals {
+	Rcpp::IntegerVector counts;
+	Rcpp::IntegerVector breaks;
+	bool ss;
+	
+	CountSignals(Rcpp::RObject csig) {
+		if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");
+		counts = Rcpp::as<Rcpp::IntegerVector>(csig.slot("counts"));
+		breaks = Rcpp::as<Rcpp::IntegerVector>(csig.slot("breaks"));
+		//if I don't put Rcpp::as<bool> some weid bugs show up
+		ss = Rcpp::as<bool>(csig.slot("ss"));
+	}
+};
 
 inline void checkIndex(int idx, Rcpp::IntegerVector& breaks){
 	if (idx < 0 || idx >= breaks.length()-1) Rcpp::stop("index out of range");
@@ -14,20 +21,20 @@ inline void checkIndex(int idx, Rcpp::IntegerVector& breaks){
 
 // [[Rcpp::export]]
 Rcpp::IntegerMatrix getMatrix(Rcpp::RObject csig, int idx){
-	unwrapCountSignals(csig);
+	CountSignals x(csig);
 	
 	//R idx to C idx
 	--idx;
 	
 	//checking preconditions
-	if (!ss) Rcpp::stop("expecting a strand-specific CountSignals object");
-	checkIndex(idx, breaks);
+	if (!x.ss) Rcpp::stop("expecting a strand-specific CountSignals object");
+	checkIndex(idx, x.breaks);
 	
 	//creating matrix
-	int len = breaks[idx+1] - breaks[idx];
+	int len = x.breaks[idx+1] - x.breaks[idx];
 	int ncol = len/2;
 	Rcpp::IntegerMatrix mat(2, ncol);
-	memcpy(mat.begin(), counts.begin() + breaks[idx], sizeof(int)*len);
+	memcpy(mat.begin(), x.counts.begin() + x.breaks[idx], sizeof(int)*len);
 	
 	//set the dimnames
 	Rcpp::List dnames(2);
@@ -39,19 +46,19 @@ Rcpp::IntegerMatrix getMatrix(Rcpp::RObject csig, int idx){
 
 // [[Rcpp::export]]
 Rcpp::IntegerVector getVector(Rcpp::RObject csig, int idx){
-	unwrapCountSignals(csig);
+	CountSignals x(csig);
 	
 	//R idx to C idx
 	--idx;
 	
 	//checking preconditions
-	if (ss) Rcpp::stop("expecting a strand-unspecific CountSignals object");
-	checkIndex(idx, breaks);
+	if (x.ss) Rcpp::stop("expecting a strand-unspecific CountSignals object");
+	checkIndex(idx, x.breaks);
 	
 	//creating vector
-	int len = breaks[idx+1] - breaks[idx];
+	int len = x.breaks[idx+1] - x.breaks[idx];
 	Rcpp::IntegerVector vec(len);
-	memcpy(vec.begin(), counts.begin() + breaks[idx], sizeof(int)*len);
+	memcpy(vec.begin(), x.counts.begin() + x.breaks[idx], sizeof(int)*len);
 	
 	return vec;
 }
@@ -59,7 +66,7 @@ Rcpp::IntegerVector getVector(Rcpp::RObject csig, int idx){
 
 // [[Rcpp::export]]
 Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs){
-	unwrapCountSignals(csig);
+	CountSignals x(csig);
 	
 	int nlen = idxs.length();
 	Rcpp::IntegerVector nbreaks(nlen+1);
@@ -69,8 +76,8 @@ Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs){
 	for (int i = 0; i < nlen; ++i){
 		//R idx to C idx
 		int idx = idxs[i] - 1;
-		checkIndex(idx, breaks);
-		acc += breaks[idx+1] - breaks[idx];
+		checkIndex(idx, x.breaks);
+		acc += x.breaks[idx+1] - x.breaks[idx];
 		nbreaks[i+1] = acc;
 	}
 	
@@ -80,21 +87,21 @@ Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs){
 		//R idx to C idx
 		int idx = idxs[i] - 1;
 		int len = nbreaks[i+1] - nbreaks[i];
-		memcpy(ncounts.begin() + nbreaks[i], counts.begin() + breaks[idx], sizeof(int)*len);
+		memcpy(ncounts.begin() + nbreaks[i], x.counts.begin() + x.breaks[idx], sizeof(int)*len);
 	}
 	
-	return Rcpp::List::create(Rcpp::Named("counts")=ncounts, Rcpp::Named("breaks")=nbreaks, Rcpp::Named("ss")=ss);
+	return Rcpp::List::create(Rcpp::Named("counts")=ncounts, Rcpp::Named("breaks")=nbreaks, Rcpp::Named("ss")=x.ss);
 }
 
 // [[Rcpp::export]]
 Rcpp::List asList(Rcpp::RObject csig){
-	unwrapCountSignals(csig);
+	CountSignals x(csig);
 	
-	int nsig = breaks.length()-1;
+	int nsig = x.breaks.length()-1;
 	Rcpp::List list(nsig);
 	
 	for (int i = 0; i < nsig; ++i){
-		if (ss) list[i] = getMatrix(csig, i+1);
+		if (x.ss) list[i] = getMatrix(csig, i+1);
 		else list[i]    = getVector(csig, i+1);
 	}
 	
@@ -103,16 +110,14 @@ Rcpp::List asList(Rcpp::RObject csig){
 
 // [[Rcpp::export]]
 Rcpp::IntegerVector fastWidth(Rcpp::RObject csig){
-	if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");
-	Rcpp::IntegerVector breaks = csig.slot("breaks");
-	bool ss =  Rcpp::as<bool>(csig.slot("ss"));
-	int div = ss?2:1;
-	int nsig = breaks.length()-1;
+	CountSignals x(csig);
+	int div = x.ss?2:1;
+	int nsig = x.breaks.length()-1;
 
 	Rcpp::IntegerVector w(nsig);
-	int last = breaks[0];
+	int last = x.breaks[0];
 	for (int i = 0; i < nsig; ++i){
-		int next = breaks[i+1];
+		int next = x.breaks[i+1];
 		w[i] = (next-last)/div;
 		last = next;
 	}
