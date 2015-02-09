@@ -20,4 +20,4 @@ Imports:
     GenomicRanges
 Suggests:
 	testthat (>= 0.9)
-LinkingTo: Rcpp
+LinkingTo: Rcpp, Rsamtools

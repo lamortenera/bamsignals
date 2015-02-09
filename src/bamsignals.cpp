@@ -1,7 +1,7 @@
 #include <Rcpp.h>
 #include <stdio.h>  
 #include <algorithm>
-#include "sam.h"  
+#include "samtools/sam.h"  
 
 //in C: true==1(or something different than 0), false==0
 //coding conventions:
@@ -31,6 +31,13 @@ inline bool isFirstInProperMappedPair(const bam1_t *b){
 typedef NumericVector::iterator Idouble;
 typedef IntegerVector::iterator Iint;
 
+//workaround, because the function 
+//"bam_init_header_hash" in samtools/bam_aux.c
+//is not in any header... this should be equivalent
+void bam_init_header_hash(bam_header_t *header){
+	int foo = 0;
+	bam_parse_region(header, "", &foo, &foo, &foo);
+}
 
 inline int getRefId(samfile_t* in, const std::string& refname){
 	return bam_get_tid(in->header, refname.c_str());
@@ -169,9 +176,7 @@ static List allocateAndDistributeMemory(std::vector<GArray>& ranges, int binsize
 	return List::create(_("counts")=counts, _("breaks")=breaks, _("ss")=ss);
 }
 
-//non-standard c++ semantics. Close should be the destructor and
-//you should implement copy constructor and copy assignment operator
-//according to the rule of three. This way you have automatic memory management.
+//if you forget to close the Bamfile you get a memory leak
 class Bamfile {
 	public:
 		samfile_t* in;
