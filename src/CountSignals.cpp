@@ -104,8 +104,8 @@ Rcpp::List asList(Rcpp::RObject csig){
 // [[Rcpp::export]]
 Rcpp::IntegerVector fastWidth(Rcpp::RObject csig){
 	if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");
-	Rcpp::IntegerVector breaks = Rcpp::as<bool>(csig.slot("breaks"));
-	bool ss = csig.slot("ss");
+	Rcpp::IntegerVector breaks = csig.slot("breaks");
+	bool ss =  Rcpp::as<bool>(csig.slot("ss"));
 	int div = ss?2:1;
 	int nsig = breaks.length()-1;
 
