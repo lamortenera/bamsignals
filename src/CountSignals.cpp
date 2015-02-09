@@ -6,10 +6,7 @@
 	Rcpp::IntegerVector counts = csig.slot("counts");\
 	Rcpp::IntegerVector breaks = csig.slot("breaks");\
 	bool ss = Rcpp::as<bool>(csig.slot("ss"));\  
-
-//if I don't put Rcpp::as<bool> some weid bugs show up with the clang compiler
-//with some versions of Rcpp 
-
+//if I don't put Rcpp::as<bool> some weid bugs show up
 
 inline void checkIndex(int idx, Rcpp::IntegerVector& breaks){
 	if (idx < 0 || idx >= breaks.length()-1) Rcpp::stop("index out of range");
@@ -107,7 +104,7 @@ Rcpp::List asList(Rcpp::RObject csig){
 // [[Rcpp::export]]
 Rcpp::IntegerVector fastWidth(Rcpp::RObject csig){
 	if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");
-	Rcpp::IntegerVector breaks = csig.slot("breaks");
+	Rcpp::IntegerVector breaks = Rcpp::as<bool>(csig.slot("breaks"));
 	bool ss = csig.slot("ss");
 	int div = ss?2:1;
 	int nsig = breaks.length()-1;
