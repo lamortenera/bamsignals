@@ -1,6 +1,5 @@
 bamsignals
 ==========
-
 [![Build Status](https://travis-ci.org/lamortenera/bamsignals.svg?branch=s4)](https://travis-ci.org/lamortenera/bamsignals)
 
 R package to quickly obtain count vectors from indexed bam files
