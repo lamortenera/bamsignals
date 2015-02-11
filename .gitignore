@@ -6,3 +6,8 @@
 #R history
 .Rhistory
 
+#Rcpp generated files
+RcppExports.*
+
+#Tests data
+tests/testthat/data

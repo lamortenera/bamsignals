@@ -29,7 +29,7 @@ coverage_core <- function(gr, bampath, mapqual = 0L, pe = FALSE, maxfraglength =
     .Call('bamsignals_coverage_core', PACKAGE = 'bamsignals', gr, bampath, mapqual, pe, maxfraglength, maxgap)
 }
 
-writeSamAsBam <- function(sampath, bampath) {
-    .Call('bamsignals_writeSamAsBam', PACKAGE = 'bamsignals', sampath, bampath)
+writeSamAsBamAndIndex <- function(sampath, bampath) {
+    .Call('bamsignals_writeSamAsBamAndIndex', PACKAGE = 'bamsignals', sampath, bampath)
 }
 
