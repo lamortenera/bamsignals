@@ -4,3 +4,4 @@ SAMVARS=$(shell "$(R_HOME)/bin$(R_ARCH_BIN)/Rscript" -e \
 include $(SAMVARS)
 
 PKG_CPPFLAGS+=-DBGZF_CACHE
+PKG_CXXFLAGS+=-I../inst/include
