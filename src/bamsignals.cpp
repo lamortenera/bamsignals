@@ -492,41 +492,37 @@ List coverage_core(RObject gr, std::string bampath, int mapqual=0, bool pe=false
 
 
 // [[Rcpp::export]]
-bool writeSamAsBam(const std::string& sampath, const std::string& bampath) {
+bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath) {
 	//streams
 	samfile_t *in = 0, *out = 0;
 
 	//open samfile for reading
 	const char* csampath = sampath.c_str();
-	in = samopen(csampath, "r", 0);  
+	in = samopen(csampath, "r", 0);
 	if (in == 0) {  
 		stop("Fail to open SAM file " + sampath);  
 	}
 
 	//open bamfile for writing
 	const char* cbampath = bampath.c_str();
-	out = samopen(cbampath, "wb", in->header);  
+	out = samopen(cbampath, "wb", in->header);
 	if (out == 0) {  
-		stop("Fail to open BAM file " + bampath);  
+		stop("Fail to open BAM file ." + bampath);  
 	}
-	Rcout << "Opened bam" << std::endl;
 
 	//read sam and write to bam: adapted from sam_view.c:232-244
 	bam1_t *b = bam_init1();
-	int r;
-	while ((r = samread(in, b)) >= 0) { // read one alignment from `in'
-		//if (!process_aln(in->header, b)) {
-			samwrite(out, b); // write the alignment to `out'
-		//}
+	while (samread(in, b) >= 0) { // read one alignment from `in'
+		samwrite(out, b); // write the alignment to `out'
 	}
 	bam_destroy1(b);
-
-	//build the index
-	//bam_index_build(cbampath);
 
 	//close streams
 	samclose(in);
 	samclose(out);
+
+	//build the index
+	bam_index_build(bampath.c_str());
 
 	return 0;
 }
