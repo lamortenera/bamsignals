@@ -1,28 +1,12 @@
 #include <Rcpp.h>
-
-//that's the equivalent of the s4 class with the same name
-struct CountSignals {
-	Rcpp::IntegerVector counts;
-	Rcpp::IntegerVector breaks;
-	bool ss;
-	
-	CountSignals(Rcpp::RObject csig) {
-		if (not csig.inherits("CountSignals")) Rcpp::stop("expecting a CountSignals object");
-		counts = Rcpp::as<Rcpp::IntegerVector>(csig.slot("counts"));
-		breaks = Rcpp::as<Rcpp::IntegerVector>(csig.slot("breaks"));
-		//if I don't put Rcpp::as<bool> some weid bugs show up
-		ss = Rcpp::as<bool>(csig.slot("ss"));
-	}
-};
+#include <bamsignals.h>
 
 inline void checkIndex(int idx, Rcpp::IntegerVector& breaks){
 	if (idx < 0 || idx >= breaks.length()-1) Rcpp::stop("index out of range");
 }
 
 // [[Rcpp::export]]
-Rcpp::IntegerMatrix getMatrix(Rcpp::RObject csig, int idx){
-	CountSignals x(csig);
-	
+Rcpp::IntegerMatrix getMatrix(CountSignals x, int idx){
 	//R idx to C idx
 	--idx;
 	
@@ -45,9 +29,7 @@ Rcpp::IntegerMatrix getMatrix(Rcpp::RObject csig, int idx){
 }
 
 // [[Rcpp::export]]
-Rcpp::IntegerVector getVector(Rcpp::RObject csig, int idx){
-	CountSignals x(csig);
-	
+Rcpp::IntegerVector getVector(CountSignals x, int idx){
 	//R idx to C idx
 	--idx;
 	
@@ -65,9 +47,7 @@ Rcpp::IntegerVector getVector(Rcpp::RObject csig, int idx){
 
 
 // [[Rcpp::export]]
-Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs){
-	CountSignals x(csig);
-	
+Rcpp::List getSubset(CountSignals x, Rcpp::IntegerVector idxs){
 	int nlen = idxs.length();
 	Rcpp::IntegerVector nbreaks(nlen+1);
 	//figure out starts and ends in the new vector
@@ -94,23 +74,20 @@ Rcpp::List getSubset(Rcpp::RObject csig, Rcpp::IntegerVector idxs){
 }
 
 // [[Rcpp::export]]
-Rcpp::List asList(Rcpp::RObject csig){
-	CountSignals x(csig);
-	
+Rcpp::List asList(CountSignals x){
 	int nsig = x.breaks.length()-1;
 	Rcpp::List list(nsig);
 	
 	for (int i = 0; i < nsig; ++i){
-		if (x.ss) list[i] = getMatrix(csig, i+1);
-		else list[i]    = getVector(csig, i+1);
+		if (x.ss) list[i] = getMatrix(x, i+1);
+		else list[i]    = getVector(x, i+1);
 	}
 	
 	return list;
 }
 
 // [[Rcpp::export]]
-Rcpp::IntegerVector fastWidth(Rcpp::RObject csig){
-	CountSignals x(csig);
+Rcpp::IntegerVector fastWidth(CountSignals x){
 	int div = x.ss?2:1;
 	int nsig = x.breaks.length()-1;
 

@@ -63,7 +63,7 @@ setMethod("width", "CountSignals", function(x) fastWidth(x))
 #' simply a vector of integers. If \code{i} is a vector of length different than 1, then
 #' the acessor returns a subset of the CountSignals object. Invalid indices result into
 #' errors.
-#' @aliases [
+#' @aliases [,CountSignals,ANY-method
 #' @export
 setMethod("[", "CountSignals", 
 	function(x, i, drop=TRUE){
@@ -86,6 +86,12 @@ setMethod("as.list", "CountSignals",
 	#it should be using the generic defined in BiocGenerics
 	function(x) asList(x)
 )
+
+#' @describeIn CountSignals Converts the container to a list \code{l} such that
+#' \code{l[[i]]} is the i-th signal.
+#' @S3method as.list x
+#' @export
+as.list.CountSignals <- function(x, ...) {asList(x)}
 
 #' @export
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
