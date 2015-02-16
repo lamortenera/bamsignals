@@ -5,7 +5,10 @@
 \title{Converts the container to a list \code{l} such that
 \code{l[[i]]} is the i-th signal.}
 \usage{
-as.list.CountSignals(x, ...)
+\method{as.list}{CountSignals}(x, ...)
+}
+\arguments{
+\item{x}{A CountSignals object}
 }
 \description{
 Converts the container to a list \code{l} such that
