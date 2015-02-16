@@ -87,9 +87,10 @@ setMethod("as.list", "CountSignals",
 	function(x) asList(x)
 )
 
-#' @describeIn CountSignals Converts the container to a list \code{l} such that
+#' Converts the container to a list \code{l} such that
 #' \code{l[[i]]} is the i-th signal.
-#' @S3method as.list x
+#' @method as.list CountSignals
+#' @param x A CountSignals object
 #' @export
 as.list.CountSignals <- function(x, ...) {asList(x)}
 

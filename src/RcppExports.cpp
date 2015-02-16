@@ -128,41 +128,6 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
-// subsetCounts
-Rcpp::List subsetCounts(Rcpp::IntegerVector counts, Rcpp::IntegerVector start, Rcpp::IntegerVector width, Rcpp::LogicalVector strand);
-RcppExport SEXP bamsignals_subsetCounts(SEXP countsSEXP, SEXP startSEXP, SEXP widthSEXP, SEXP strandSEXP) {
-BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type counts(countsSEXP );
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type start(startSEXP );
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type width(widthSEXP );
-        Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type strand(strandSEXP );
-        Rcpp::List __result = subsetCounts(counts, start, width, strand);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
-END_RCPP
-}
-// countInSubset
-Rcpp::IntegerVector countInSubset(Rcpp::IntegerVector counts, Rcpp::IntegerVector start, Rcpp::IntegerVector width);
-RcppExport SEXP bamsignals_countInSubset(SEXP countsSEXP, SEXP startSEXP, SEXP widthSEXP) {
-BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type counts(countsSEXP );
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type start(startSEXP );
-        Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type width(widthSEXP );
-        Rcpp::IntegerVector __result = countInSubset(counts, start, width);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
-END_RCPP
-}
 // writeSamAsBamAndIndex
 bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath);
 RcppExport SEXP bamsignals_writeSamAsBamAndIndex(SEXP sampathSEXP, SEXP bampathSEXP) {
