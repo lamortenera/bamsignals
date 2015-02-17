@@ -4,11 +4,8 @@ Title: Extract read count signals from bam files
 Version: 1.1
 Date: 2014-12-23
 Authors@R: as.person(c( "Alessandro Mammana <mammana@molgen.mpg.de> [aut, cre,
-    cph]", "Johannes Helmuth [aut, cph]", "Genome Research Ltd. [cph] (Files in
-    the src/samtools* folder with minor modifications)" ))
-Author: Alessandro Mammana [aut, cre, cph], Johannes Helmuth [aut, cph], Genome
-    Research Ltd. [cph] (Files in the src/samtools* folder with minor
-    modifications)
+    cph]", "Johannes Helmuth [aut, cph]"))
+Author: Alessandro Mammana [aut, cre, cph], Johannes Helmuth [aut, cph]
 Maintainer: Alessandro Mammana <mammana@molgen.mpg.de>
 Description: Functions to quickly obtain count vectors from indexed bam files
 License: file LICENSE
@@ -17,9 +14,12 @@ Imports:
     BiocGenerics,
     Rcpp (>= 0.10.6),
     IRanges,
-    GenomicRanges
+    GenomicRanges,
 Suggests: 
-	testthat (>= 0.9),
-	BiocStyle, knitr, rmarkdown
+    testthat (>= 0.9),
+    Rsamtools,
+    BiocStyle, 
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp, Rsamtools
 VignetteBuilder: knitr

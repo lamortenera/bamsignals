@@ -9,6 +9,8 @@
 }
 \arguments{
 \item{x}{A CountSignals object}
+
+\item{...}{not used}
 }
 \description{
 Converts the container to a list \code{l} such that
