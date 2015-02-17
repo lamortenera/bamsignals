@@ -91,6 +91,7 @@ setMethod("as.list", "CountSignals",
 #' \code{l[[i]]} is the i-th signal.
 #' @method as.list CountSignals
 #' @param x A CountSignals object
+#' @param ... not used
 #' @export
 as.list.CountSignals <- function(x, ...) {asList(x)}
 
