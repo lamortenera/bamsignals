@@ -20,6 +20,7 @@
 #' @aliases CountSignals
 #' @seealso \code{\link{bamsignals-methods}} for the functions that produce 
 #' this object
+#' @example inst/examples/class_example.R
 #' @export
 setClass( "CountSignals", 
 	representation = representation( 

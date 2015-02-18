@@ -14,7 +14,7 @@ Imports:
     BiocGenerics,
     Rcpp (>= 0.10.6),
     IRanges,
-    GenomicRanges,
+    GenomicRanges
 Suggests: 
     testthat (>= 0.9),
     Rsamtools,
