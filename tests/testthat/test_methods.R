@@ -1,130 +1,107 @@
 context("bamsignals methods")
-
-#add a strand specific shift to each range
-ssshift <- function(gr, shift){
-	shifts <- rep(shift, length(gr))
-	shifts[as.logical(strand(gr)=="-")] <- -shift
-	
-	GenomicRanges::shift(gr, shifts)
-}
-
-#implement the count function in R
-countR <- function(genes, reads, shift=0, ss=FALSE){
-	#apply the shift to the reads
-	reads <- ssshift(reads, shift)
-	
-	ov <- findOverlaps(genes, reads, select="all", type="any", ignore.strand=TRUE)
-	
-	ssCounts <- sapply(1:length(genes), function(g){
-		gStart <- start(genes)[g]
-		gEnd <- end(genes)[g]
-		#get the reads overlapping with this gene
-		ovReads <- reads[subjectHits(ov)[queryHits(ov)==g]]
-		#sum up positive reads
-		preads <- sum(start(ovReads)>=gStart & start(ovReads)<=gEnd & strand(ovReads)=="+")
-		#sum up negative reads
-		nreads <- sum(end(ovReads)>=gStart & end(ovReads)<=gEnd & strand(ovReads)=="-")
-		c(preads, nreads)
-	})
-	
-	#reverse columns of negative regions
-	toRev <- as.logical(strand(genes)=="-")
-	ssCounts[,toRev] <- ssCounts[c(2,1),toRev]
-	rownames(ssCounts) <- c("sense", "antisense")
-	if (!ss) return(colSums(ssCounts))
-	
-	ssCounts
-}
-
-#implement the pileup function in R
-pileupR <- function(genes, reads, shift=0, ss=FALSE){
-	#apply the shift to the reads
-	reads <- ssshift(reads, shift)
-	
-	ov <- findOverlaps(genes, reads, select="all", type="any", ignore.strand=TRUE)
-	
-	isNegGene <- as.logical(strand(genes)=="-")
-	lapply(seq_along(genes), function(g){
-		gStart <- start(genes)[g]
-		gEnd <- end(genes)[g]
-		gLen <- gEnd-gStart+1
-		#get the reads overlapping with this gene
-		ovReads <- reads[subjectHits(ov)[queryHits(ov)==g]]
-		isNeg <- as.logical(strand(ovReads)=="-")
-		#sum up positive reads
-		pStarts <- start(ovReads)[!isNeg]
-		preads <- table(factor(pStarts-gStart+1, levels=1:gLen))
-		#sum up negative reads
-		nEnds <- end(ovReads)[isNeg]
-		nreads <- table(factor(nEnds-gStart+1, levels=1:gLen))
-		
-		mat <- t(cbind(preads, nreads))
-		if (isNegGene[g]) {
-			#take into account the strand of the region
-			mat <- rev(mat)
-		}
-		
-		mat <- as.integer(mat)
-		dim(mat) <- c(2, length(preads))
-		dimnames(mat) <- NULL
-		
-		if (ss){#make matrix
-			rownames(mat) <- c("sense", "antisense")
-			colnames(mat) <- NULL
-			return(mat)
-		} else return(colSums(mat))
-	})
-}
-
-depthR <- function(genes, reads){
-	isNegGene <- as.logical(strand(genes)=="-")
-	seqNames <- as.character(seqnames(genes))
-	
-	#use the already implemented coverage function
-	cvrg <- coverage(reads)
-	lapply(seq_along(genes), function(g){
-		sig <- cvrg[[seqNames[g]]][start(genes)[g]:end(genes)[g]]
-		#take into account strand of the region
-		if (isNegGene[g]) sig <- rev(sig)
-		as.integer(sig)
-	})
-}
-
-
-## TOY DATA ##
 library(GenomicRanges)
 library(Rsamtools)
-bampath <- system.file("extdata", "randomBam.bam", package="bamsignals")
-genes <- get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
+source("utils.R")
 
-#load the reads with Rsamtools
-reads <- scanBam(bampath)[[1]]
-#make a GRanges object
-reads <- GRanges(seqnames=reads$rname, strand=reads$strand, IRanges(start=reads$pos, width=reads$qwidth))
+
+## GENERATE TOY DATA ##
+##reads
+nRef <- 3  #number of chromosomes
+lastStart <- 1e3 #last start of a read pair (i.e. chromosome length more or less)
+nPairs <- 1e5 #number of read pairs
+avgRLen <- 30 #average read length
+avgFLen <- 150 #average fragment length or template length
+nRemove <- 1e3 #remove random reads from the pairs
+bampath <- paste0(tempfile(), ".bam") #path where to save the bam file
+
+##regions
+nRegions <- 20		#number of regions
+avgRegLen <- 200	#average region length
+
+
+#generate reads
+posReads <- data.frame(
+	rname=sample(nRef, nPairs, replace=TRUE),			#chromosome name
+	pos=sample(lastStart, nPairs, replace=TRUE),	#start of the read
+	qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),		#length of the read
+	strand=rep("+", nPairs), 											#strand
+	isize=1+rpois(nPairs, lambda=(avgFLen-1)),		#template (or fragment) length
+	read1=(sample(2, nPairs, replace=TRUE)==1),		#is it the first read in the pair?
+	mapq=sample(254, nPairs, replace=TRUE))				#mapping quality
+
+negReads <- data.frame(
+	rname=posReads$rname,
+	qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),
+	strand=rep("-", nPairs),
+	isize=-posReads$isize,
+	read1=!posReads$read1,
+	mapq=sample(254, nPairs, replace=TRUE))
+negReads$pos <- posReads$pos + posReads$isize - negReads$qwidth
+
+reads <- rbind(posReads, negReads)
+#remove some of them
+reads <- reads[-sample(nrow(reads), nRemove),]
+
+#write to a bam file
+readsToBam(reads, bampath)
+
+#generate regions
+regions <- GRanges(
+	seqnames=sample(nRef, nRegions, replace=TRUE),
+	strand=sample(c("+", "-"), nRegions, replace=TRUE),
+	ranges=IRanges(
+		start=sample(lastStart, nRegions, replace=TRUE), 
+		width=1+rpois(nRegions, lambda=(avgRegLen-1))))
+
+
+
+getPem <- function(pe){
+	if (pe) return(c(TRUE, FALSE))
+	FALSE
+}
+
+argsToStr <- function(args){
+	#vals <- sapply(args, get)
+	paste(collapse=",", sep="=", args)#, vals)
+}
 
 test_that("count function", {
-	shifts <- c(0, 100)
-	sss <- c(TRUE, FALSE)
-	for (shift in shifts){
-		for (ss in sss){
-			expect_equal(countR(genes, reads, ss=ss, shift=shift), 
-			count(genes, bampath, ss=ss, shift=shift, verbose=FALSE))
-		}
-	}
+	for (shift in c(0, 100)){
+		for (mapq in c(0, 100)){
+			for (ss in c(TRUE, FALSE)){
+				for (pe in c(TRUE, FALSE)){
+					for (pem in getPem(pe)){
+						expect_equal(
+							label=paste0("count{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
+							countR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
+							count(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
+	}	}	}	}	}
 })
 
 test_that("pileup function", {
-	shifts <- c(0, 100)
-	sss <- c(TRUE, FALSE)
-	for (shift in shifts){
-		for (ss in sss){
-			expect_equal(pileupR(genes, reads, ss=ss, shift=shift), 
-			as.list(bamsignals::pileup(genes, bampath, ss=ss, shift=shift, verbose=FALSE)))
-		}
-	}
+	for (shift in c(0, 100)){
+		for (mapq in c(0, 100)){
+			for (ss in c(TRUE, FALSE)){
+				for (pe in c(TRUE, FALSE)){
+					for (pem in getPem(pe)){
+						expect_equal(
+							label=paste0("pileup{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
+							pileupR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
+							as.list(bamsignals::pileup(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
+	}	}	}	}	}
 })
 
+
 test_that("depth function", {
-	expect_equal(depthR(genes, reads), as.list(depth(genes, bampath, verbose=FALSE)))
+	for (mapq in c(0, 100)){
+		for (pe in c(TRUE, FALSE)){
+				expect_equal(
+					label=paste0("depth{", argsToStr(c("mapq", "pe")), "}"),
+					depthR(regions, reads, paired.end=pe, mapqual=mapq), 
+					as.list(depth(regions, bampath, paired.end=pe, mapqual=mapq, verbose=FALSE)))
+	}	}
 })
+
+#remove the temporary files
+unlink(paste0(bampath, c("", ".bai")))
 

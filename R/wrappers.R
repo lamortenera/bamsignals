@@ -34,16 +34,12 @@ NULL
 #' @param ss produce a strand-specific profile or ignore the strand of the read. This option
 #' does not have any effect on the strand of the region. Strand-specific profiles are
 #' twice as long then strand-independent profiles.
-#' @param format attempts to find a suitable matrix/array format for the count vector. 
-#' if the profile is strand-specific one dimension will correspond to sense
-#' and anti-sense strand, if the ranges have all the same width one dimension
-#' will correspond to the range number.
 #' @param paired.end a logical value indicating whether the bampath contains paired-end 
 #' sequencing output. In this case, only first reads in proper mapped pairs are considered. 
 #' @param paired.end.midpoint a logical value indicating whether the fragment middle 
 #' points of each fragment should be counted. Therefore it uses the tlen information from
 #' the given bam file (MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen, 
-#' the given midpoint is the round half down real midpoint.
+#' the given midpoint will be moved of 0.5 basepairs in the 3' direction.
 #' @param paired.end.max.frag.length an integer indicating which fragments should be 
 #' considered in paired-end sequencing data. Default value of 1,000 bases is generally
 #' a good pick.
@@ -63,6 +59,26 @@ NULL
 NULL
 
 #' @export
+setGeneric("count", function(gr, bampath, ...) standardGeneric("count"))
+#' \code{count}: for each range, count the reads whose 5' end map in it.
+#' @aliases count
+#' @rdname bamsignals-methods
+#' @export
+setMethod("count", c("GenomicRanges", "character"), 
+	function(gr, bampath, mapqual=0, shift=0, ss=F, paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
+		if (verbose) printStupidSentence(bampath)
+		
+		pu <- pileup_core(gr, bampath, mapqual, max(width(gr)), shift, ss, paired.end, paired.end.midpoint, paired.end.max.frag.length)
+		if (ss) {
+			dim(pu$counts) <- c(2, length(gr))
+			rownames(pu$counts) <- c("sense", "antisense")
+		}
+		return(pu$counts)
+	}
+)
+
+
+#' @export
 setGeneric("pileup", function(gr, bampath, ...) standardGeneric("pileup"))
 #' \code{pileup}: for each base pair in the ranges, compute the number of reads whose
 #' 5' end maps there.
@@ -70,7 +86,7 @@ setGeneric("pileup", function(gr, bampath, ...) standardGeneric("pileup"))
 #' @rdname bamsignals-methods
 #' @export
 setMethod("pileup", c("GenomicRanges", "character"), 
-	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, format=T, 
+	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=F, 
 	paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
 		if (verbose) printStupidSentence(bampath)
 		
@@ -94,30 +110,11 @@ setGeneric("depth", function(gr, bampath, ...) standardGeneric("depth"))
 #' @rdname bamsignals-methods
 #' @export
 setMethod("depth", c("GenomicRanges", "character"), 
-	function(gr, bampath, mapqual=0, format=T, paired.end=F, paired.end.max.frag.length=1000, verbose=T){
+	function(gr, bampath, mapqual=0, paired.end=F, paired.end.max.frag.length=1000, verbose=T){
 		if (verbose) printStupidSentence(bampath)
 		
 		pu <- coverage_core(gr, bampath, mapqual, paired.end, paired.end.max.frag.length)
 		new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
-	}
-)
-
-#' @export
-setGeneric("count", function(gr, bampath, ...) standardGeneric("count"))
-#' \code{count}: for each range, count the reads whose 5' end map in it.
-#' @aliases count
-#' @rdname bamsignals-methods
-#' @export
-setMethod("count", c("GenomicRanges", "character"), 
-	function(gr, bampath, mapqual=0, shift=0, ss=F, paired.end=F, paired.end.midpoint=F, paired.end.max.frag.length=1000, verbose=T){
-		if (verbose) printStupidSentence(bampath)
-		
-		pu <- pileup_core(gr, bampath, mapqual, max(width(gr)), shift, ss, paired.end, paired.end.midpoint, paired.end.max.frag.length)
-		if (ss) {
-			dim(pu$counts) <- c(2, length(gr))
-			rownames(pu$counts) <- c("sense", "antisense")
-		}
-		return(pu$counts)
 	}
 )
 

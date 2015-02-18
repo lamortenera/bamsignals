@@ -11,27 +11,22 @@
 \alias{pileup,GenomicRanges,character-method}
 \title{Functions for extracting count signals from a bam file.}
 \usage{
-\S4method{pileup}{GenomicRanges,character}(gr, bampath, binsize = 1,
-  mapqual = 0, shift = 0, ss = F, format = T, paired.end = F,
-  paired.end.midpoint = F, paired.end.max.frag.length = 1000, verbose = T)
-
-\S4method{depth}{GenomicRanges,character}(gr, bampath, mapqual = 0,
-  format = T, paired.end = F, paired.end.max.frag.length = 1000,
-  verbose = T)
-
 \S4method{count}{GenomicRanges,character}(gr, bampath, mapqual = 0,
   shift = 0, ss = F, paired.end = F, paired.end.midpoint = F,
   paired.end.max.frag.length = 1000, verbose = T)
+
+\S4method{pileup}{GenomicRanges,character}(gr, bampath, binsize = 1,
+  mapqual = 0, shift = 0, ss = F, paired.end = F,
+  paired.end.midpoint = F, paired.end.max.frag.length = 1000, verbose = T)
+
+\S4method{depth}{GenomicRanges,character}(gr, bampath, mapqual = 0,
+  paired.end = F, paired.end.max.frag.length = 1000, verbose = T)
 }
 \arguments{
 \item{gr}{GenomicRanges object used to specify the regions}
 
 \item{bampath}{path to the bam file storing the read. The file must be indexed.
 If a range is on the negative strand the profile will be reverse-complemented.}
-
-\item{binsize}{If the value is set to 1, the method will return basepair-resolution read densities,
-for bigger values the density profiles will be binned (and the memory requirements
-will scale accordingly).}
 
 \item{mapqual}{discard reads with mapping quality strictly lower than this parameter.
 The value 0 ensures that no read will be discarded, the value 254 that only reads
@@ -44,24 +39,23 @@ be handy in the analysis of chip-seq data.}
 does not have any effect on the strand of the region. Strand-specific profiles are
 twice as long then strand-independent profiles.}
 
-\item{format}{attempts to find a suitable matrix/array format for the count vector.
-if the profile is strand-specific one dimension will correspond to sense
-and anti-sense strand, if the ranges have all the same width one dimension
-will correspond to the range number.}
-
 \item{paired.end}{a logical value indicating whether the bampath contains paired-end
 sequencing output. In this case, only first reads in proper mapped pairs are considered.}
 
 \item{paired.end.midpoint}{a logical value indicating whether the fragment middle
 points of each fragment should be counted. Therefore it uses the tlen information from
 the given bam file (MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen,
-the given midpoint is the round half down real midpoint.}
+the given midpoint will be moved of 0.5 basepairs in the 3' direction.}
 
 \item{paired.end.max.frag.length}{an integer indicating which fragments should be
 considered in paired-end sequencing data. Default value of 1,000 bases is generally
 a good pick.}
 
 \item{verbose}{a logical value indicating whether verbose output is desired}
+
+\item{binsize}{If the value is set to 1, the method will return basepair-resolution read densities,
+for bigger values the density profiles will be binned (and the memory requirements
+will scale accordingly).}
 }
 \value{
 \itemize{
@@ -73,13 +67,13 @@ a good pick.}
 \description{
 Functions for extracting count signals from a bam file.
 
+\code{count}: for each range, count the reads whose 5' end map in it.
+
 \code{pileup}: for each base pair in the ranges, compute the number of reads whose
 5' end maps there.
 
 \code{depth}: for each base pair in the ranges, compute the number of reads
 covering it.
-
-\code{count}: for each range, count the reads whose 5' end map in it.
 }
 \details{
 A read position is always specified by its 5' end, so a read mapping to the reference strand

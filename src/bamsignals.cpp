@@ -344,8 +344,7 @@ class Coverager{
 	void pileup(GArray& range, const bam1_t* read, int start, int end){
 		//check if the read really overlaps
 		if (start < range.end() && end >= range.loc){
-		    	//Rcout << "-> took read " << std::endl;
-			if (range.strand >= 0){
+		  if (range.strand >= 0){
 				//range on the reference strand
 				int pos = start-range.loc;
 				++range.array[pos>0?pos:0];
@@ -374,12 +373,10 @@ class Coverager{
 		bool negstrand = isNegStrand(read);
 		if (negstrand && isize < 0) {        //-strand read: only calculate if isize is meaningful, otherwise fall back to given start
 		    start = end + isize;
-		    //Rcout << "-FRAG: " << start << "-" << end << " ( pos = " << (read->core).pos << ", read_end = " << bam_calend(&(read->core), bam1_cigar(read)) << " )" <<  std::endl;
 		} else if (!negstrand && isize > 0) { //+strand read: only calculate if isize is meaningful, otherwise fall back to given end (i.e. bam.c::bam_calend output)
-		    end   = start + isize - 1;
-		    //Rcout << "+FRAG: " << start << "-" << end << " ( pos = " << (read->core).pos << ", read_end = " << bam_calend(&(read->core), bam1_cigar(read)) << " )" <<  std::endl;
+		    end   = start + isize;
 		}
-		pileup( range, read, start, end);
+		pileup(range, read, start, end);
 	}
 };
 
@@ -524,5 +521,5 @@ bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampat
 	//build the index
 	bam_index_build(bampath.c_str());
 
-	return 0;
+	return true;
 }
