@@ -1,7 +1,7 @@
 ## ----style, echo = FALSE, results = 'asis'-------------------------------
 BiocStyle::markdown()
 
-## ----, message = FALSE---------------------------------------------------
+## ----message = FALSE-----------------------------------------------------
 library(GenomicRanges)
 library(Rsamtools)
 library(bamsignals)
@@ -92,13 +92,13 @@ stopifnot(all(sigsMat == sigsArr["sense",,] + sigsArr["antisense",,]))
 avgSig <- rowMeans(sigsMat)
 avgSenseSig <- rowMeans(sigsArr["sense",,])
 avgAntisenseSig <- rowMeans(sigsArr["antisense",,])
-ylab <- "average counts per base pair (negative means antisense)"
+ylab <- "average counts per base pair"
 xlab <- "distance from TSS"
 main <- paste0("average profile of ", length(proms), " promoters")
 xs <- -99:100
-plot(xs, avgSig, ylim=c(-max(avgSig), max(avgSig)), xlab=xlab, ylab=ylab, main=main, type="l")
+plot(xs, avgSig, ylim=c(0, max(avgSig)), xlab=xlab, ylab=ylab, main=main, type="l")
 lines(xs, avgSenseSig, col="blue")
-lines(xs, -avgAntisenseSig, col="red")
+lines(xs, avgAntisenseSig, col="red")
 legend("topright", c("sense", "antisense", "both"), col=c("blue", "red", "black"), lty=1)
 
 ## ------------------------------------------------------------------------
@@ -111,7 +111,7 @@ binnedSigs
 ## ------------------------------------------------------------------------
 avgBinnedSig <- rowMeans(alignSignals(binnedSigs))
 #the counts in the bin are the sum of the counts in each base pair
-stopifnot(all(colSums(matrix(avgSig, nrow=binsize))==avgBinnedSig))
+stopifnot(all.equal(colSums(matrix(avgSig, nrow=binsize)),avgBinnedSig))
 #let's plot it
 ylab <- "average counts per base pair"
 plot(xs, avgSig, xlab=xlab, ylab=ylab, main=main, type="l")

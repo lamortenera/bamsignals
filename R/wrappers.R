@@ -39,8 +39,7 @@ NULL
 #' and anti-sense strand, if the ranges have all the same width one dimension
 #' will correspond to the range number.
 #' @param paired.end a logical value indicating whether the bampath contains paired-end 
-#' sequencing output. In this case, only first reads in proper mapped pairs are considered 
-#' (FLAG 66).
+#' sequencing output. In this case, only first reads in proper mapped pairs are considered. 
 #' @param paired.end.midpoint a logical value indicating whether the fragment middle 
 #' points of each fragment should be counted. Therefore it uses the tlen information from
 #' the given bam file (MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen, 
@@ -60,6 +59,7 @@ NULL
 #' @seealso \code{\link{CountSignals}} for handling the return value of 
 #' \code{pileup} and \code{depth}
 #' @name bamsignals-methods
+#' @example inst/examples/methods_example.R
 NULL
 
 #' @export
