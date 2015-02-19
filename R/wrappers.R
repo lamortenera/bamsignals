@@ -48,9 +48,9 @@ NULL
 #' bases is generally a good pick.
 #' @param verbose a logical value indicating whether verbose output is desired
 #' @return \itemize{
-#'   \item \code{bamcountprofile} and \code{bamcoverage}: a CountSignals object with a signal 
+#'   \item \code{bamProfile} and \code{bamCoverage}: a CountSignals object with a signal 
 #'     per region
-#'   \item \code{bamcount}: a vector with one element per region or, 
+#'   \item \code{bamCount}: a vector with one element per region or, 
 #'     if \code{ss==TRUE}, a matrix with one column per region and two rows 
 #'     (sense and antisense).
 #' }
@@ -59,18 +59,18 @@ NULL
 #' read mapping to the alternative strand is positioned at its rightmost 
 #' coordinate. This can be changed using the \code{shift} parameter.
 #' @seealso \code{\link{CountSignals}} for handling the return value of 
-#' \code{bamcountprofile} and \code{bamcoverage}
+#' \code{bamProfile} and \code{bamCoverage}
 #' @name bamsignals-methods
 #' @example inst/examples/methods_example.R
 NULL
 
 #' @export
-setGeneric("bamcount", function(gr, bampath, ...) standardGeneric("bamcount"))
-#' \code{bamcount}: for each range, count the reads whose 5' end map in it.
-#' @aliases bamcount
+setGeneric("bamCount", function(gr, bampath, ...) standardGeneric("bamCount"))
+#' \code{bamCount}: for each range, count the reads whose 5' end map in it.
+#' @aliases bamCount
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamcount", c("GenomicRanges", "character"), 
+setMethod("bamCount", c("GenomicRanges", "character"), 
 	function(gr, bampath, mapqual=0, shift=0, ss=FALSE, 
 	paired.end=FALSE, paired.end.midpoint=FALSE, 
 	paired.end.max.frag.length=1000, verbose=TRUE){
@@ -88,13 +88,13 @@ setMethod("bamcount", c("GenomicRanges", "character"),
 
 
 #' @export
-setGeneric("bamcountprofile", function(gr, bampath, ...) standardGeneric("bamcountprofile"))
-#' \code{bamcountprofile}: for each base pair in the ranges, compute the number of reads
+setGeneric("bamProfile", function(gr, bampath, ...) standardGeneric("bamProfile"))
+#' \code{bamProfile}: for each base pair in the ranges, compute the number of reads
 #' whose 5' end maps there.
-#' @aliases bamcountprofile
+#' @aliases bamProfile
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamcountprofile", c("GenomicRanges", "character"), 
+setMethod("bamProfile", c("GenomicRanges", "character"), 
 	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=FALSE, 
 	paired.end=FALSE, paired.end.midpoint=FALSE,
 	 paired.end.max.frag.length=1000, verbose=TRUE){
@@ -114,13 +114,13 @@ setMethod("bamcountprofile", c("GenomicRanges", "character"),
 )
 
 #' @export
-setGeneric("bamcoverage", function(gr, bampath, ...) standardGeneric("bamcoverage"))
-#' \code{bamcoverage}: for each base pair in the ranges, compute the number of reads
+setGeneric("bamCoverage", function(gr, bampath, ...) standardGeneric("bamCoverage"))
+#' \code{bamCoverage}: for each base pair in the ranges, compute the number of reads
 #' covering it.
-#' @aliases bamcoverage
+#' @aliases bamCoverage
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamcoverage", c("GenomicRanges", "character"), 
+setMethod("bamCoverage", c("GenomicRanges", "character"), 
 	function(gr, bampath, mapqual=0, paired.end=FALSE,
 	paired.end.max.frag.length=1000, verbose=TRUE){
 		if (verbose) printStupidSentence(bampath)

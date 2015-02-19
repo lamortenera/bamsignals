@@ -65,7 +65,7 @@ argsToStr <- function(args){
 	paste(collapse=",", sep="=", args)#, vals)
 }
 
-test_that("bamcount function", {
+test_that("bamCount function", {
 	for (shift in c(0, 100)){
 		for (mapq in c(0, 100)){
 			for (ss in c(TRUE, FALSE)){
@@ -74,31 +74,31 @@ test_that("bamcount function", {
 						expect_equal(
 							label=paste0("count{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
 							countR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							bamcount(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
+							bamCount(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
 	}	}	}	}	}
 })
 
-test_that("bamcountprofile function", {
+test_that("bamProfile function", {
 	for (shift in c(0, 100)){
 		for (mapq in c(0, 100)){
 			for (ss in c(TRUE, FALSE)){
 				for (pe in c(TRUE, FALSE)){
 					for (pem in getPem(pe)){
 						expect_equal(
-							label=paste0("bamcountprofile{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
-							pileupR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							as.list(bamcountprofile(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
+							label=paste0("bamProfile{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
+							profileR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
+							as.list(bamProfile(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
 	}	}	}	}	}
 })
 
 
-test_that("bamcoverage function", {
+test_that("bamCoverage function", {
 	for (mapq in c(0, 100)){
 		for (pe in c(TRUE, FALSE)){
 				expect_equal(
-					label=paste0("bamcoverage{", argsToStr(c("mapq", "pe")), "}"),
-					depthR(regions, reads, paired.end=pe, mapqual=mapq), 
-					as.list(bamcoverage(regions, bampath, paired.end=pe, mapqual=mapq, verbose=FALSE)))
+					label=paste0("bamCoverage{", argsToStr(c("mapq", "pe")), "}"),
+					coverageR(regions, reads, paired.end=pe, mapqual=mapq), 
+					as.list(bamCoverage(regions, bampath, paired.end=pe, mapqual=mapq, verbose=FALSE)))
 	}	}
 })
 

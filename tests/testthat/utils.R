@@ -188,7 +188,7 @@ countR <- function(genes, reads, ss=FALSE, ...){
 	ssCounts
 }
 
-pileupR <- function(genes, reads, ss=FALSE, ...){
+profileR <- function(genes, reads, ss=FALSE, ...){
 	reads <- df2gr(reads, ...)
 	
 	ov <- findOverlaps(genes, reads, select="all", type="any", ignore.strand=TRUE)
@@ -226,7 +226,7 @@ pileupR <- function(genes, reads, ss=FALSE, ...){
 	})
 }
 
-depthR <- function(genes, reads, ...){
+coverageR <- function(genes, reads, ...){
 	reads <- df2gr(reads, ...)
 	
 	isNegGene <- as.logical(strand(genes)=="-")
