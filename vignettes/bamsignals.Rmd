@@ -31,7 +31,8 @@ library(bamsignals)
 In the following we will use a sorted and indexed bam file and a gene annotation.
 ```{r}
 bampath <- system.file("extdata", "randomBam.bam", package="bamsignals")
-genes <- get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
+genes <- 
+	get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
 genes
 ```
 
@@ -114,18 +115,21 @@ str(sssigs[1])
 stopifnot(colSums(sssigs[1])==sigs[1])
 #the width function takes into account that now the signals are strand-specific
 stopifnot(width(sssigs)==width(sigs))
-#the length function does not, a strand-specific signal is twice as long as before
+#the length function does not, a strand-specific signal is twice as long
 stopifnot(length(sssigs[1])==2*length(sigs[1]))
 ```
 Let's summarize this with a plot
 ```{r}
 xlab <- "offset from start of the region"
 ylab <- "counts per base pair (negative means antisense)"
-main <- paste0("read profile of the region ", seqnames(genes)[1], ":", start(genes)[1], "-", end(genes)[1])
-plot(sigs[1], ylim=c(-max(sigs[1]), max(sigs[1])), ylab=ylab, xlab=xlab, main=main, type="l")
+main <- paste0("read profile of the region ", 
+	seqnames(genes)[1], ":", start(genes)[1], "-", end(genes)[1])
+plot(sigs[1], ylim=c(-max(sigs[1]), max(sigs[1])), ylab=ylab, xlab=xlab, 
+	main=main, type="l")
 lines(sssigs[1]["sense",], col="blue")
 lines(-sssigs[1]["antisense",], col="red")
-legend("topright", c("sense", "antisense", "both"), col=c("blue", "red", "black"), lty=1)
+legend("topright", c("sense", "antisense", "both"), 
+	col=c("blue", "red", "black"), lty=1)
 ```
 
 ### Regions of the same width
@@ -160,10 +164,12 @@ ylab <- "average counts per base pair"
 xlab <- "distance from TSS"
 main <- paste0("average profile of ", length(proms), " promoters")
 xs <- -99:100
-plot(xs, avgSig, ylim=c(0, max(avgSig)), xlab=xlab, ylab=ylab, main=main, type="l")
+plot(xs, avgSig, ylim=c(0, max(avgSig)), xlab=xlab, ylab=ylab, main=main,
+	type="l")
 lines(xs, avgSenseSig, col="blue")
 lines(xs, avgAntisenseSig, col="red")
-legend("topright", c("sense", "antisense", "both"), col=c("blue", "red", "black"), lty=1)
+legend("topright", c("sense", "antisense", "both"), 
+	col=c("blue", "red", "black"), lty=1)
 ```
 
 ### Binning counts
@@ -199,10 +205,13 @@ covSigs <- bamsignals::depth(genes, bampath, verbose=FALSE)
 puSigs <- bamsignals::pileup(genes, bampath, verbose=FALSE)
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
-main <- paste0("read coverage and profile of the region ", seqnames(genes)[1], ":", start(genes)[1], "-", end(genes)[1])
-plot(covSigs[1], ylim=c(0, max(covSigs[1])), ylab=ylab, xlab=xlab, main=main, type="l")
+main <- paste0("read coverage and profile of the region ", seqnames(genes)[1],
+	":", start(genes)[1], "-", end(genes)[1])
+plot(covSigs[1], ylim=c(0, max(covSigs[1])), ylab=ylab, xlab=xlab, main=main,
+	type="l")
 lines(puSigs[1], lty=2)
-legend("topright", c("covering the base pair", "5' end maps to the base pair"), lty=c(1,2))
+legend("topright", c("covering the base pair", "5' end maps to the base pair"), 
+	lty=c(1,2))
 ```
 
 

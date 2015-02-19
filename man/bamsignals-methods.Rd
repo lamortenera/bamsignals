@@ -12,56 +12,63 @@
 \title{Functions for extracting count signals from a bam file.}
 \usage{
 \S4method{count}{GenomicRanges,character}(gr, bampath, mapqual = 0,
-  shift = 0, ss = F, paired.end = F, paired.end.midpoint = F,
-  paired.end.max.frag.length = 1000, verbose = T)
+  shift = 0, ss = FALSE, paired.end = FALSE,
+  paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
+  verbose = TRUE)
 
 \S4method{pileup}{GenomicRanges,character}(gr, bampath, binsize = 1,
-  mapqual = 0, shift = 0, ss = F, paired.end = F,
-  paired.end.midpoint = F, paired.end.max.frag.length = 1000, verbose = T)
+  mapqual = 0, shift = 0, ss = FALSE, paired.end = FALSE,
+  paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
+  verbose = TRUE)
 
 \S4method{depth}{GenomicRanges,character}(gr, bampath, mapqual = 0,
-  paired.end = F, paired.end.max.frag.length = 1000, verbose = T)
+  paired.end = FALSE, paired.end.max.frag.length = 1000, verbose = TRUE)
 }
 \arguments{
 \item{gr}{GenomicRanges object used to specify the regions}
 
-\item{bampath}{path to the bam file storing the read. The file must be indexed.
-If a range is on the negative strand the profile will be reverse-complemented.}
+\item{bampath}{path to the bam file storing the read. The file must be
+indexed. If a range is on the negative strand the profile will be
+reverse-complemented.}
 
-\item{mapqual}{discard reads with mapping quality strictly lower than this parameter.
-The value 0 ensures that no read will be discarded, the value 254 that only reads
-with the highest possible mapping quality will be considered.}
+\item{mapqual}{discard reads with mapping quality strictly lower than this
+parameter. The value 0 ensures that no read will be discarded, the value 254
+that only reads with the highest possible mapping quality will be considered.}
 
-\item{shift}{shift the read position by a user-defined number of basepairs. This can
-be handy in the analysis of chip-seq data.}
+\item{shift}{shift the read position by a user-defined number of basepairs.
+This can be handy in the analysis of chip-seq data.}
 
-\item{ss}{produce a strand-specific profile or ignore the strand of the read. This option
-does not have any effect on the strand of the region. Strand-specific profiles are
-twice as long then strand-independent profiles.}
+\item{ss}{produce a strand-specific profile or ignore the strand of the read.
+This option does not have any effect on the strand of the region.
+Strand-specific profiles are twice as long then strand-independent profiles.}
 
-\item{paired.end}{a logical value indicating whether the bampath contains paired-end
-sequencing output. In this case, only first reads in proper mapped pairs are considered.}
+\item{paired.end}{a logical value indicating whether the bampath contains
+paired-end sequencing output. In this case, only first reads in proper mapped
+pairs are considered.}
 
-\item{paired.end.midpoint}{a logical value indicating whether the fragment middle
-points of each fragment should be counted. Therefore it uses the tlen information from
-the given bam file (MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen,
+\item{paired.end.midpoint}{a logical value indicating whether the fragment
+middle points of each fragment should be counted. Therefore it uses the tlen
+information from the given bam file
+(MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen,
 the given midpoint will be moved of 0.5 basepairs in the 3' direction.}
 
-\item{paired.end.max.frag.length}{an integer indicating which fragments should be
-considered in paired-end sequencing data. Default value of 1,000 bases is generally
-a good pick.}
+\item{paired.end.max.frag.length}{an integer indicating which fragments
+should be considered in paired-end sequencing data. Default value of 1,000
+bases is generally a good pick.}
 
 \item{verbose}{a logical value indicating whether verbose output is desired}
 
-\item{binsize}{If the value is set to 1, the method will return basepair-resolution read densities,
-for bigger values the density profiles will be binned (and the memory requirements
-will scale accordingly).}
+\item{binsize}{If the value is set to 1, the method will return
+basepair-resolution read densities, for bigger values the density profiles
+will be binned (and the memory requirements will scale accordingly).}
 }
 \value{
 \itemize{
-  \item \code{pileup} and \code{depth}: a CountSignals object with a signal per region
-  \item \code{count}: a vector with one element per region or, if \code{ss==TRUE},
-  a matrix with one column per region and two rows (sense and antisense).
+  \item \code{pileup} and \code{depth}: a CountSignals object with a signal
+    per region
+  \item \code{count}: a vector with one element per region or,
+    if \code{ss==TRUE}, a matrix with one column per region and two rows
+    (sense and antisense).
 }
 }
 \description{
@@ -69,16 +76,17 @@ Functions for extracting count signals from a bam file.
 
 \code{count}: for each range, count the reads whose 5' end map in it.
 
-\code{pileup}: for each base pair in the ranges, compute the number of reads whose
-5' end maps there.
+\code{pileup}: for each base pair in the ranges, compute the number of reads
+whose 5' end maps there.
 
 \code{depth}: for each base pair in the ranges, compute the number of reads
 covering it.
 }
 \details{
-A read position is always specified by its 5' end, so a read mapping to the reference strand
-is positioned at its leftmost coordinate, a read mapping to the alternative strand
-is positioned at its rightmost coordinate. This can be changed using the \code{shift} parameter.
+A read position is always specified by its 5' end, so a read mapping
+to the reference strand is positioned at its leftmost coordinate, a
+read mapping to the alternative strand is positioned at its rightmost
+coordinate. This can be changed using the \code{shift} parameter.
 }
 \examples{
 ## TOY DATA ##

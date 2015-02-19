@@ -20,6 +20,7 @@
 #' @aliases CountSignals
 #' @seealso \code{\link{bamsignals-methods}} for the functions that produce 
 #' this object
+#' @return return values are described in the Methods section.
 #' @example inst/examples/class_example.R
 #' @export
 setClass( "CountSignals", 
@@ -35,11 +36,16 @@ setValidity( "CountSignals",
 		x <- object
 		if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
 		len <- length(x@breaks)-1
-		if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) return("breaks first element must be 0 and the last must be length(x@counts)")
+		if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) {
+			return("breaks first element must be 0 
+			and the last must be length(x@counts)")
+		}
 		if (len > 0){
 			d <- diff(x@breaks)
 			if (any(d) < 0) return("breaks must be increasing numbers")
-			if (x@ss && any(d %% 2 == 1)) return("odd number of elements in a strand-specific signal...")
+			if (x@ss && any(d %% 2 == 1)) {
+				return("odd number of elements in a strand-specific signal...")
+			}
 		}
 		TRUE
 	}
@@ -51,19 +57,21 @@ setValidity( "CountSignals",
 setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 
 #' @describeIn CountSignals Width of each signal. If the CountSignals
-#' object \code{csig} is strand-specific then \code{width(csig)[i] = ncol(csig[i])},
-#' otherwise \code{width(csig)[i] = length(csig[i])}.
+#' object \code{csig} is strand-specific then
+#' \code{width(csig)[i] == ncol(csig[i])}, otherwise 
+#' \code{width(csig)[i] = length(csig[i])}.
 #' @aliases width
 #' @export
 setMethod("width", "CountSignals", function(x) fastWidth(x))
 
-#' @describeIn CountSignals Access single signals or subset the CountSignals object.
-#' If \code{i} is a single index and \code{drop==TRUE} then the accessor returns a single signal. 
-#' If \code{x} is strand-specific then a single signal is a matrix with two rows, the first
-#' for the sense, the second for the antisense strand. Otherwise a signle signal is
-#' simply a vector of integers. If \code{i} is a vector of length different than 1, then
-#' the acessor returns a subset of the CountSignals object. Invalid indices result into
-#' errors.
+#' @describeIn CountSignals Access single signals or subset the CountSignals 
+#' object.
+#' If \code{i} is a single index and \code{drop==TRUE} then the accessor returns
+#' a single signal. If \code{x} is strand-specific then a single signal is a 
+#' matrix with two rows, the first for the sense, the second for the antisense 
+#' strand. Otherwise a signle signal is simply a vector of integers. If \code{i}
+#' is a vector of length different than 1, then the acessor returns a subset of 
+#' the CountSignals object. Invalid indices result into errors.
 #' @aliases [,CountSignals,ANY-method
 #' @export
 setMethod("[", "CountSignals", 
@@ -93,6 +101,8 @@ setMethod("as.list", "CountSignals",
 #' @method as.list CountSignals
 #' @param x A CountSignals object
 #' @param ... not used
+#' @return a list \code{l} such that
+#' \code{l[[i]]} is \code{x[i]}.
 #' @export
 as.list.CountSignals <- function(x, ...) {asList(x)}
 
@@ -133,22 +143,23 @@ showCounts <- function(v){
 }
 
 showCountSignals <- function(x){
-	cat("CountSignals object with ", length(x), ifelse(x@ss, " strand-specific", ""), 
-	" signal", ifelse(length(x)!=1, "s", ""), fill=T, sep="")
+	cat("CountSignals object with ", length(x), 
+	ifelse(x@ss, " strand-specific", ""), 
+	" signal", ifelse(length(x)!=1, "s", ""), fill=TRUE, sep="")
 	
 	if (length(x) == 0) return()
 	
 	for (i in 1:min(5, length(x))){
 		el <- x[i]
 		npos <- ifelse(x@ss, ncol(el), length(el))
-		cat("[",i, "] signal of width ", npos, fill=T, sep="")
+		cat("[",i, "] signal of width ", npos, fill=TRUE, sep="")
 		if (x@ss){
-			cat("sense      ", showCounts(el[1,]), sep="", fill=T)
-			cat("antisense  ", showCounts(el[2,]), sep="", fill=T)
-		} else cat(showCounts(el), fill=T)
+			cat("sense      ", showCounts(el[1,]), sep="", fill=TRUE)
+			cat("antisense  ", showCounts(el[2,]), sep="", fill=TRUE)
+		} else cat(showCounts(el), fill=TRUE)
 	}
 	if (length(x)>5)
-	cat("....", fill=T)
+	cat("....", fill=TRUE)
 }
 
 setMethod("show", "CountSignals", function(object) showCountSignals(object))
