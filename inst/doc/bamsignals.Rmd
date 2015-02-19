@@ -17,7 +17,7 @@ BiocStyle::markdown()
 
 # Introduction to the bamsignals package
 
-The goal of the `bamsignals` package is to load count data from bam files as easily and quickly as possible. A typical workflow without the `bamsignals` package requires to firstly load all reads in R (_e.g._ using the `Rsamtools` package), secondly process them and lastly convert them into counts. The `bamsignals` package optimizes this workflow by merging these steps into one using efficient C code, which makes the whole process easier and faster. Additionally, `bamsignals` inherently can deal with paired end data which is a problem in most workflows.
+The goal of the `bamsignals` package is to load count data from bam files as easily and quickly as possible. A typical workflow without the `bamsignals` package requires to firstly load all reads in R (_e.g._ using the `Rsamtools` package), secondly process them and lastly convert them into counts. The `bamsignals` package optimizes this workflow by merging these steps into one using efficient C code, which makes the whole process easier and faster. Additionally, `bamsignals` comes with native support for paired end data.
 
 ## Loading toy data
 
@@ -49,23 +49,23 @@ file.exists(gsub(".bam$", ".bam.bai", bampath))
 
 ```
 
-## Counting reads in given ranges with `bamcount()`
+## Counting reads in given ranges with `bamCount()`
 
 ### Basic counting
-Let's count how many reads map to the promoter regions of our genes. Using the `bamcount()` function, this is straightforward.
+Let's count how many reads map to the promoter regions of our genes. Using the `bamCount()` function, this is straightforward.
 
 ```{r}
 proms <- GenomicRanges::promoters(genes, upstream=100, downstream=100)
-counts <- bamcount(proms, bampath, verbose=FALSE)
+counts <- bamCount(proms, bampath, verbose=FALSE)
 str(counts)
 ```
 The object `counts` is a vector of the same length as the number of ranges that we are analyzing, the `i`-th count corresponds to the `i`-th range.
 
 ### Accounting for fragment length
-With the `bamcount()` function a read is counted in a range if the 5' end of the read falls in that range. This might be appropriate when analyzing DNase I hypersensitivity tags, however for ChIP-seq data the immunoprecipitated protein is normally located downstream with respect to the 5' end of the sequenced reads. To correct for that, it is possible to count reads with a strand-specific shift, _i.e._ reads will be counted in a range if the shifted 5' end falls in that range. Note that this shift will move reads mapped to the positive strand to the right and reads mapped to the negative strand to the left with respect to the reference orientation. The shift should correspond approximately to half of the average length of the fragments in the sequencing experiment.
+With the `bamCount()` function a read is counted in a range if the 5' end of the read falls in that range. This might be appropriate when analyzing DNase I hypersensitivity tags, however for ChIP-seq data the immunoprecipitated protein is normally located downstream with respect to the 5' end of the sequenced reads. To correct for that, it is possible to count reads with a strand-specific shift, _i.e._ reads will be counted in a range if the shifted 5' end falls in that range. Note that this shift will move reads mapped to the positive strand to the right and reads mapped to the negative strand to the left with respect to the reference orientation. The shift should correspond approximately to half of the average length of the fragments in the sequencing experiment.
 
 ```{r}
-counts <- bamcount(proms, bampath, verbose=FALSE, shift=75)
+counts <- bamCount(proms, bampath, verbose=FALSE, shift=75)
 str(counts)
 ```
 
@@ -74,17 +74,17 @@ Sometimes it is necessary to consider the two genomic strands separately. This i
 
 ```{r}
 strand(proms)
-counts <- bamcount(proms, bampath, verbose=FALSE, ss=TRUE)
+counts <- bamCount(proms, bampath, verbose=FALSE, ss=TRUE)
 str(counts)
 ```
 
 Now `counts` is a matrix with two rows, one for the sense strand, the other for the antisense strand. Note that the sense of a read is decided also by the region it falls into, so if both the region and the read are on the same strand the read is counted as a sense read, otherwise as an antisense read.
 
-## Read profiles for each region with `bamcountprofile()`
+## Read profiles for each region with `bamProfile()`
 
-If you are interested in counting how many reads map to each base pair of your genes, the `bamcountprofile()` function might save you a day.
+If you are interested in counting how many reads map to each base pair of your genes, the `bamProfile()` function might save you a day.
 ```{r}
-sigs <- bamcountprofile(genes, bampath, verbose=FALSE)
+sigs <- bamProfile(genes, bampath, verbose=FALSE)
 sigs
 ```
 The `CountSignals` class is a read-only container for count vectors. Conceptually it is like a `list` of vectors, and in fact it can be immediately converted to that format.
@@ -103,9 +103,9 @@ stopifnot(all(width(sigs)==width(genes)))
 ```
 
 ### Counting on each strand separately
-As for the `bamcount()` function, the reads can be counted for each strand separately
+As for the `bamCount()` function, the reads can be counted for each strand separately
 ```{r}
-sssigs <- bamcountprofile(genes, bampath, verbose=FALSE, ss=TRUE)
+sssigs <- bamProfile(genes, bampath, verbose=FALSE, ss=TRUE)
 sssigs
 ```
 Now each signal is a matrix with two rows.
@@ -136,8 +136,8 @@ legend("topright", c("sense", "antisense", "both"),
 In case our ranges have all the same width, a `CountSignals` object can be immediately converted into a matrix, or an array, with the `alignSignals` function
 ```{r}
 #The promoter regions have all the same width
-sigs <- bamcountprofile(proms, bampath, ss=FALSE, verbose=FALSE)
-sssigs <- bamcountprofile(proms, bampath, ss=TRUE, verbose=FALSE)
+sigs <- bamProfile(proms, bampath, ss=FALSE, verbose=FALSE)
+sssigs <- bamProfile(proms, bampath, ss=TRUE, verbose=FALSE)
 
 sigsMat <- alignSignals(sigs)
 sigsArr <- alignSignals(sssigs)
@@ -174,11 +174,11 @@ legend("topright", c("sense", "antisense", "both"),
 
 ### Binning counts
 
-Very often it is better to count reads mapping to small regions instead of single base pairs. Bins are small non-overlapping regions of fixed size tiling a larger region. Instead of splitting your regions of interest into bins, it is easier and much more efficient to provide the `binsize` option to `bamcountprofile()`.
+Very often it is better to count reads mapping to small regions instead of single base pairs. Bins are small non-overlapping regions of fixed size tiling a larger region. Instead of splitting your regions of interest into bins, it is easier and much more efficient to provide the `binsize` option to `bamProfile()`.
 ```{r}
 
 binsize <- 20
-binnedSigs <- bamcountprofile(proms, bampath, binsize=binsize)
+binnedSigs <- bamProfile(proms, bampath, binsize=binsize)
 stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs
 ```
@@ -197,12 +197,12 @@ legend("topright", c("base pair count", "bin count"), lty=c(1, 2))
 
 ```
 
-## Read coverage with `bamcoverage()`
+## Read coverage with `bamCoverage()`
 
-Instead of counting the 5' end of each read, you may want to count how many reads overlap each base pair, you should check out the `bamcoverage()` function.
+Instead of counting the 5' end of each read, you may want to count how many reads overlap each base pair, you should check out the `bamCoverage()` function.
 ```{r}
-covSigs <- bamcoverage(genes, bampath, verbose=FALSE)
-puSigs <- bamcountprofile(genes, bampath, verbose=FALSE)
+covSigs <- bamCoverage(genes, bampath, verbose=FALSE)
+puSigs <- bamProfile(genes, bampath, verbose=FALSE)
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
 main <- paste0("read coverage and profile of the region ", seqnames(genes)[1],
@@ -214,16 +214,16 @@ legend("topright", c("covering the base pair", "5' end maps to the base pair"),
 	lty=c(1,2))
 ```
 
-# Hacks
+# Notes
 
 ## Paired end data handling
 
-All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end=TRUE`, only the first read in a properly aligned pair are considered. This avoids counting both reads in read pair which may bias downstream analysis. For `bamcount()` and `bamcountprofile()` exclusively, there exists another flag called `paired.end.midpoint`. The actual length of a fragment is stored in the TLEN field of a paired end bam file. Setting `paired.end.midpoint=TRUE` shifts the counting position from 5'end to the midpoint of the physical fragment.
+All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end=TRUE`, only the first read in a properly aligned pair are considered. This avoids counting both reads in read pair which may bias downstream analysis. For `bamCount()` and `bamProfile()` exclusively, there exists another flag called `paired.end.midpoint`. The actual length of a fragment is stored in the TLEN field of a paired end bam file. Setting `paired.end.midpoint=TRUE` shifts the counting position from 5'end to the midpoint of the physical fragment.
 
 ## Exclude ambiguous reads with the `mapq` argument
 
 Most mapping software (_e.g._ bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the `mapq` argument is helpful.
 
 ```{r}
-counts <- bamcount(proms, bampath, mapq=20, verbose=FALSE)
+counts <- bamCount(proms, bampath, mapq=20, verbose=FALSE)
 ```

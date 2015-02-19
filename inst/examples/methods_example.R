@@ -8,7 +8,7 @@ get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
 
 ## THE FUNCTION 'count' ##
 #count how many reads map in each region (according to 5' end)
-v <- count(genes, bampath)
+v <- bamCount(genes, bampath)
 #plot it
 labs <- paste0(seqnames(genes), ":", start(genes), "-", end(genes))
 par(mar=c(5, 6, 4, 2))
@@ -16,7 +16,7 @@ barplot(v, names.arg=labs, main="read counts per region", las=2,
 	horiz=TRUE, cex.names=.6)
 
 #distinguish between strands
-v2 <- count(genes, bampath, ss=TRUE)
+v2 <- bamCount(genes, bampath, ss=TRUE)
 #plot it
 par(mar=c(5, 6, 4, 2))
 barplot(v2, names.arg=labs, main="read counts per region", las=2, 
@@ -24,11 +24,11 @@ barplot(v2, names.arg=labs, main="read counts per region", las=2,
 
 
 
-## THE FUNCTIONS 'pileup' and 'depth' ##
+## THE FUNCTIONS 'bamProfile' and 'bamCoverage' ##
 #count how many reads map to each base pair (according to 5' end)
-pu <- bamsignals::pileup(genes, bampath)
+pu <- bamProfile(genes, bampath)
 #count how many reads cover each base pair
-du <- depth(genes, bampath)
+du <- bamCoverage(genes, bampath)
 #plot it
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
@@ -40,21 +40,21 @@ legend("topright", llab, lty=c(1,2), bg="white")
 
 
 
-## REGIONS OF THE SAME SIZE AND OPTIONS FOR 'pileup' ##
+## REGIONS OF THE SAME SIZE AND OPTIONS FOR 'bamProfile' ##
 proms <- promoters(genes, upstream=150, downstream=150)
 #pileup according to strand
-pu_ss <- bamsignals::pileup(proms, bampath, ss=TRUE)
+pu_ss <- bamProfile(proms, bampath, ss=TRUE)
 #compute average over regions
 avg_ss <- apply(alignSignals(pu_ss), 2, rowMeans)
 
-#pileup using a strand-specific shift
-pu_shift <- bamsignals::pileup(proms, bampath, shift=75)
+#profile using a strand-specific shift
+pu_shift <- bamProfile(proms, bampath, shift=75)
 #compute average over regions
 avg_shift <- rowMeans(alignSignals(pu_shift))
 
-#pileup using a strand-specific shift and a binning scheme
+#profile using a strand-specific shift and a binning scheme
 binsize <- 20
-pu_shift_bin <- bamsignals::pileup(proms, bampath, shift=75, binsize=binsize)
+pu_shift_bin <- bamProfile(proms, bampath, shift=75, binsize=binsize)
 #compute average over regions
 avg_shift_bin <- rowMeans(alignSignals(pu_shift_bin))
 

@@ -4,7 +4,7 @@ bampath <-
 system.file("extdata", "randomBam.bam", package="bamsignals")
 genes <- 
 get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
-csig <- bamsignals::pileup(genes, bampath, ss=TRUE)
+csig <- bamProfile(genes, bampath, ss=TRUE)
 
 #show it
 show(csig)
@@ -26,7 +26,7 @@ siglist <- as.list(csig)
 
 #get regions and signals of the same width
 proms <- promoters(genes, upstream=150, downstream=150)
-csig <- depth(proms, bampath)
+csig <- bamCoverage(proms, bampath)
 
 #convert to matrix
 mat <- alignSignals(csig)
