@@ -12,6 +12,10 @@
 
 \item{...}{not used}
 }
+\value{
+a list \code{l} such that
+\code{l[[i]]} is \code{x[i]}.
+}
 \description{
 Converts the container to a list \code{l} such that
 \code{l[[i]]} is the i-th signal.

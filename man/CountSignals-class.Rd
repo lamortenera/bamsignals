@@ -35,6 +35,9 @@ a vector of indices.}
 \item{drop}{In case \code{i} is a vector of length 1, after subsetting,
 collapse the CountSignal object to a single signal or not.}
 }
+\value{
+return values are described in the Methods section.
+}
 \description{
 This is usually the output of the methods in the bamsignals package.
 Among other things the container provides an accessor method,
@@ -48,16 +51,18 @@ object is read-only, i.e. it cannot be modified.
 \item \code{length}: Number of contained signals
 
 \item \code{width}: Width of each signal. If the CountSignals
-object \code{csig} is strand-specific then \code{width(csig)[i] = ncol(csig[i])},
-otherwise \code{width(csig)[i] = length(csig[i])}.
+object \code{csig} is strand-specific then
+\code{width(csig)[i] == ncol(csig[i])}, otherwise
+\code{width(csig)[i] = length(csig[i])}.
 
-\item \code{[}: Access single signals or subset the CountSignals object.
-If \code{i} is a single index and \code{drop==TRUE} then the accessor returns a single signal.
-If \code{x} is strand-specific then a single signal is a matrix with two rows, the first
-for the sense, the second for the antisense strand. Otherwise a signle signal is
-simply a vector of integers. If \code{i} is a vector of length different than 1, then
-the acessor returns a subset of the CountSignals object. Invalid indices result into
-errors.
+\item \code{[}: Access single signals or subset the CountSignals
+object.
+If \code{i} is a single index and \code{drop==TRUE} then the accessor returns
+a single signal. If \code{x} is strand-specific then a single signal is a
+matrix with two rows, the first for the sense, the second for the antisense
+strand. Otherwise a signle signal is simply a vector of integers. If \code{i}
+is a vector of length different than 1, then the acessor returns a subset of
+the CountSignals object. Invalid indices result into errors.
 
 \item \code{as.list}: Converts the container to a list \code{l} such that
 \code{l[[i]]} is the i-th signal.
