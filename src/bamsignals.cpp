@@ -341,6 +341,7 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 class Coverager{
 	public:
 	
+	//start and end are "included", i.e. they are both part of the read
 	void pileup(GArray& range, const bam1_t* read, int start, int end){
 		//check if the read really overlaps
 		if (start < range.end() && end >= range.loc){
@@ -372,9 +373,9 @@ class Coverager{
 		int isize = (read->core).isize;
 		bool negstrand = isNegStrand(read);
 		if (negstrand && isize < 0) {        //-strand read: only calculate if isize is meaningful, otherwise fall back to given start
-		    start = end + isize;
+		    start = end + isize + 1;
 		} else if (!negstrand && isize > 0) { //+strand read: only calculate if isize is meaningful, otherwise fall back to given end (i.e. bam.c::bam_calend output)
-		    end   = start + isize;
+		    end   = start + isize - 1;
 		}
 		pileup(range, read, start, end);
 	}
@@ -393,11 +394,7 @@ class Pileupper{
 		ss = ass;
 	}
 	
-	//can be accelerated by rewriting a similar one for special cases:
-	//ss=false, ignoreRegionStrand, binsize=1
-	//and storing in range extra information: range.loc - shift and range.loc + shift
-	//this could be probably done by templating this class (so everything would be written just once).
-	//
+	//start and end are "included", i.e. they are both part of the read
 	void pileup(GArray& range, const bam1_t* read, int start, int end){
 		bool negstrand = isNegStrand(read);
 		//relative position from the start of the range

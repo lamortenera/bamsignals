@@ -14,8 +14,8 @@ isPEData <- function(reads){
 #scanBam in Rsamtools, except that only the fields
 #qname, rname*, strand*, pos*, qwidth*, mapq* are used 
 #('*' means required)
-#and for paired end reads also the fields read1 and isize
-#the field read1 is not in the Rsamtools format, but we need
+#and for paired end reads also the fields read1 and isize.
+#The field read1 is not in the Rsamtools format, but we need
 #it to compute the flag. It means "is this read here the read 1
 #in the pair?", and it defines the orientation of the pair.
 #another difference, the reads object must inherit from "data.frame"
