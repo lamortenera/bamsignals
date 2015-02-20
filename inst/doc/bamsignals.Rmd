@@ -218,7 +218,7 @@ legend("topright", c("covering the base pair", "5' end maps to the base pair"),
 
 ## Paired end data handling
 
-All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end=TRUE`, only the first read in a properly aligned pair are considered. This avoids counting both reads in read pair which may bias downstream analysis. For `bamCount()` and `bamProfile()` exclusively, there exists another flag called `paired.end.midpoint`. The actual length of a fragment is stored in the TLEN field of a paired end bam file. Setting `paired.end.midpoint=TRUE` shifts the counting position from 5'end to the midpoint of the physical fragment.
+All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end=TRUE`, only the first read in a properly aligned pair is considered. The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For `bamCoverage()` the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a paired end bam file. For `bamCount()` and `bamProfile()` exclusively, there exists another flag called `paired.end.midpoint`.  Setting `paired.end.midpoint=TRUE` shifts the counting position from the 5'end to the midpoint of the fragment.
 
 ## Exclude ambiguous reads with the `mapq` argument
 

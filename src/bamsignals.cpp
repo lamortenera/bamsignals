@@ -235,14 +235,16 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<TRegion>& ranges, int m
 		unsigned int chunk_start = processed;
 		int rid = ranges[chunk_start].rid;
 		int start = ranges[chunk_start].loc - shift;
+		int end = ranges[chunk_start].end() + shift;
 		//find out how many regions to process together
 		unsigned int chunk_end = chunk_start+1;
 		for (; chunk_end < ranges.size(); ++chunk_end){
-			if (ranges[chunk_end].rid != rid || ranges[chunk_end].loc - ranges[chunk_end-1].end() - 2*shift > MAX_GAP){
+			int next_start = ranges[chunk_end].loc - shift;
+			if (ranges[chunk_end].rid != rid || next_start - end > MAX_GAP){
 				break;
 			}
+			end = std::max(end, ranges[chunk_end].end() + shift);
 		}
-		int end = ranges[chunk_end-1].end() + shift;
 		//perform query
 		bam_iter_t iter = bam_iter_query(bfile.idx, rid, start, end);
 		//all ranges behind curr_range should not overlap with the next reads anymore
@@ -295,14 +297,16 @@ static void overlapAndPileupPairedEnd(Bamfile& bfile, std::vector<TRegion>& rang
 		unsigned int chunk_start = processed;
 		int rid = ranges[chunk_start].rid;
 		int start = ranges[chunk_start].loc - window;
+		int end = ranges[chunk_start].end() + window;
 		//find out how many regions to process together
 		unsigned int chunk_end = chunk_start+1;
 		for (; chunk_end < ranges.size(); ++chunk_end){
-			if (ranges[chunk_end].rid != rid || ranges[chunk_end].loc - ranges[chunk_end-1].end() - 2*window > MAX_GAP){
+			int next_start = ranges[chunk_end].loc - window;
+			if (ranges[chunk_end].rid != rid || next_start - end > MAX_GAP){
 				break;
 			}
+			end = std::max(end, ranges[chunk_end].end() + window);
 		}
-		int end = ranges[chunk_end-1].end() + window;
 		//perform query
 		bam_iter_t iter = bam_iter_query(bfile.idx, rid, start, end); 
 		//all ranges behind curr_range should not overlap with the next reads anymore

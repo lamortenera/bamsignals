@@ -61,8 +61,8 @@ getPem <- function(pe){
 }
 
 argsToStr <- function(args){
-	#vals <- sapply(args, get)
-	paste(collapse=",", sep="=", args)#, vals)
+	vals <- sapply(args, get, envir=globalenv())
+	paste(collapse=",", sep="=", args, vals)
 }
 
 test_that("bamCount function", {
@@ -72,7 +72,9 @@ test_that("bamCount function", {
 				for (pe in c(TRUE, FALSE)){
 					for (pem in getPem(pe)){
 						expect_equal(
-							label=paste0("count{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
+							label=paste0("bamCount{", 
+							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
+							"}"),
 							countR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
 							bamCount(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
 	}	}	}	}	}
@@ -85,7 +87,9 @@ test_that("bamProfile function", {
 				for (pe in c(TRUE, FALSE)){
 					for (pem in getPem(pe)){
 						expect_equal(
-							label=paste0("bamProfile{", argsToStr(c("shift", "mapq", "ss", "pe", "pem")), "}"),
+							label=paste0("bamProfile{", 
+							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
+							"}"),
 							profileR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
 							as.list(bamProfile(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
 	}	}	}	}	}
@@ -96,7 +100,7 @@ test_that("bamCoverage function", {
 	for (mapq in c(0, 100)){
 		for (pe in c(TRUE, FALSE)){
 				expect_equal(
-					label=paste0("bamCoverage{", argsToStr(c("mapq", "pe")), "}"),
+					label=paste0("bamCoverage{mapq=",mapq, ", pe=", pe, "}"),
 					coverageR(regions, reads, paired.end=pe, mapqual=mapq), 
 					as.list(bamCoverage(regions, bampath, paired.end=pe, mapqual=mapq, verbose=FALSE)))
 	}	}

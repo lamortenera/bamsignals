@@ -8,20 +8,23 @@ Authors@R: c(
 	person(given="Johannes",family="Helmuth", email="helmuth@molgen.mpg.de", role=c("aut", "cph")))
 Author: Alessandro Mammana [aut, cre, cph], Johannes Helmuth [aut, cph]
 Maintainer: Alessandro Mammana <mammana@molgen.mpg.de>
-Description: Functions to quickly obtain count vectors from indexed bam files
+Description: This package allows to efficiently obtain count vectors from 
+	indexed bam files. It counts the number of reads in given genomic ranges and
+	it computes reads profiles and coverage profiles. It also handles paired-end 
+	data.
 License: file LICENSE
 Imports: 
-    methods,
-    BiocGenerics,
-    Rcpp (>= 0.10.6),
-    IRanges,
-    GenomicRanges
+	methods,
+	BiocGenerics,
+	Rcpp (>= 0.10.6),
+	IRanges,
+	GenomicRanges
 Suggests: 
-    testthat (>= 0.9),
-    Rsamtools,
-    BiocStyle, 
-    knitr,
-    rmarkdown
+	testthat (>= 0.9),
+	Rsamtools,
+	BiocStyle, 
+	knitr,
+	rmarkdown
 LinkingTo: Rcpp, Rsamtools
 biocViews: DataImport, Sequencing, Coverage, Alignment
 VignetteBuilder: knitr
