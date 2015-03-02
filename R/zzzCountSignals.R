@@ -16,7 +16,7 @@
 #' @slot breaks An integer vector such that signal i corresponds to the 
 #' counts \code{counts[(breaks[i]+1):breaks[i+1]]}
 #' @slot ss A single boolean value indicating whether all
-#'	 signals are strand-specific or not
+#'     signals are strand-specific or not
 #' @aliases CountSignals
 #' @seealso \code{\link{bamsignals-methods}} for the functions that produce 
 #' this object
@@ -24,31 +24,31 @@
 #' @example inst/examples/class_example.R
 #' @export
 setClass( "CountSignals", 
-	representation = representation( 
-		counts = "integer",
-		breaks = "integer",
-		ss = "logical" )
+    representation = representation( 
+        counts = "integer",
+        breaks = "integer",
+        ss = "logical" )
 )
 
 
 setValidity( "CountSignals", 
-	function(object) {
-		x <- object
-		if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
-		len <- length(x@breaks)-1
-		if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) {
-			return("breaks first element must be 0 
-			and the last must be length(x@counts)")
-		}
-		if (len > 0){
-			d <- diff(x@breaks)
-			if (any(d) < 0) return("breaks must be increasing numbers")
-			if (x@ss && any(d %% 2 == 1)) {
-				return("odd number of elements in a strand-specific signal...")
-			}
-		}
-		TRUE
-	}
+    function(object) {
+        x <- object
+        if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
+        len <- length(x@breaks)-1
+        if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) {
+            return("breaks first element must be 0 
+            and the last must be length(x@counts)")
+        }
+        if (len > 0){
+            d <- diff(x@breaks)
+            if (any(d) < 0) return("breaks must be increasing numbers")
+            if (x@ss && any(d %% 2 == 1)) {
+                return("odd number of elements in a strand-specific signal...")
+            }
+        }
+        TRUE
+    }
 )
 
 #' @describeIn CountSignals Number of contained signals
@@ -75,16 +75,16 @@ setMethod("width", "CountSignals", function(x) fastWidth(x))
 #' @aliases [,CountSignals,ANY-method
 #' @export
 setMethod("[", "CountSignals", 
-	function(x, i, drop=TRUE){
-		if (length(i)==1 && drop){
-			if (x@ss) {
-				return(getMatrix(x, i))
-			}	else  {return(getVector(x, i))}
-		} 
-		
-		largs <- getSubset(x, as.integer(i))
-		new("CountSignals", counts=largs$counts, breaks=largs$breaks, ss=largs$ss)
-	}
+    function(x, i, drop=TRUE){
+        if (length(i)==1 && drop){
+            if (x@ss) {
+                return(getMatrix(x, i))
+            }    else  {return(getVector(x, i))}
+        } 
+        
+        largs <- getSubset(x, as.integer(i))
+        new("CountSignals", counts=largs$counts, breaks=largs$breaks, ss=largs$ss)
+    }
 )
 
 #' @describeIn CountSignals Converts the container to a list \code{l} such that
@@ -92,8 +92,8 @@ setMethod("[", "CountSignals",
 #' @aliases as.list
 #' @export
 setMethod("as.list", "CountSignals",
-	#it should be using the generic defined in BiocGenerics
-	function(x) asList(x)
+    #it should be using the generic defined in BiocGenerics
+    function(x) asList(x)
 )
 
 #' Converts the container to a list \code{l} such that
@@ -116,50 +116,50 @@ setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
 #' @aliases alignSignals
 #' @export
 setMethod("alignSignals", "CountSignals",
-	function(x){
-		lens <- diff(x@breaks)
-		if (any(lens[1] != lens)) stop("all signals must have the same length")
-		lastDim <- length(x)
-		firstDims <- length(x@counts)/lastDim
-		if (x@ss){
-			ret <- x@counts
-			dim(ret) <- c(2, firstDims/2, lastDim)
-			dimnames(ret) <- list(c("sense", "antisense"), NULL, NULL)
-			ret
-		} else {
-			ret <- x@counts
-			dim(ret) <- c(firstDims, lastDim)
-			ret
-		}
-	}
+    function(x){
+        lens <- diff(x@breaks)
+        if (any(lens[1] != lens)) stop("all signals must have the same length")
+        lastDim <- length(x)
+        firstDims <- length(x@counts)/lastDim
+        if (x@ss){
+            ret <- x@counts
+            dim(ret) <- c(2, firstDims/2, lastDim)
+            dimnames(ret) <- list(c("sense", "antisense"), NULL, NULL)
+            ret
+        } else {
+            ret <- x@counts
+            dim(ret) <- c(firstDims, lastDim)
+            ret
+        }
+    }
 )
 
 
 showCounts <- function(v){
-	nprint <- min(length(v), 10)
-	res <- paste0(as.character(v[1:nprint]), collapse=" ")
-	if (nprint < length(v)) res <- paste(res, "...")
-	res
+    nprint <- min(length(v), 10)
+    res <- paste0(as.character(v[1:nprint]), collapse=" ")
+    if (nprint < length(v)) res <- paste(res, "...")
+    res
 }
 
 showCountSignals <- function(x){
-	cat("CountSignals object with ", length(x), 
-	ifelse(x@ss, " strand-specific", ""), 
-	" signal", ifelse(length(x)!=1, "s", ""), fill=TRUE, sep="")
-	
-	if (length(x) == 0) return()
-	
-	for (i in 1:min(5, length(x))){
-		el <- x[i]
-		npos <- ifelse(x@ss, ncol(el), length(el))
-		cat("[",i, "] signal of width ", npos, fill=TRUE, sep="")
-		if (x@ss){
-			cat("sense      ", showCounts(el[1,]), sep="", fill=TRUE)
-			cat("antisense  ", showCounts(el[2,]), sep="", fill=TRUE)
-		} else cat(showCounts(el), fill=TRUE)
-	}
-	if (length(x)>5)
-	cat("....", fill=TRUE)
+    cat("CountSignals object with ", length(x), 
+    ifelse(x@ss, " strand-specific", ""), 
+    " signal", ifelse(length(x)!=1, "s", ""), fill=TRUE, sep="")
+    
+    if (length(x) == 0) return()
+    
+    for (i in 1:min(5, length(x))){
+        el <- x[i]
+        npos <- ifelse(x@ss, ncol(el), length(el))
+        cat("[",i, "] signal of width ", npos, fill=TRUE, sep="")
+        if (x@ss){
+            cat("sense      ", showCounts(el[1,]), sep="", fill=TRUE)
+            cat("antisense  ", showCounts(el[2,]), sep="", fill=TRUE)
+        } else cat(showCounts(el), fill=TRUE)
+    }
+    if (length(x)>5)
+    cat("....", fill=TRUE)
 }
 
 setMethod("show", "CountSignals", function(object) showCountSignals(object))
