@@ -1,12 +1,10 @@
 SAMTOOLS_PATH=\
-    `echo 'cat(system.file("usrlib", .Platform[["r_arch"]],\
-                         package="Rsamtools", mustWork=TRUE))' |\
-                 "${R_HOME}/bin/R" --vanilla --slave`
-PKG_LIBS+="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
-	"$(SAMTOOLS_PATH)/libtabix.a" -lz
-PKG_CPPFLAGS+=-D_USE_KNETFILE -D_FILE_OFFSET_BITS=64 \
-	-D_LARGEFILE64_SOURCE
+    `echo 'cat(system.file("usrlib", package="Rsamtools", mustWork=TRUE))' |\
+        "${R_HOME}/bin/R" --vanilla --slave`
+SAMTOOLS_LIBS="$(SAMTOOLS_PATH)/libbam.a" "$(SAMTOOLS_PATH)/libbcf.a"\
+    "$(SAMTOOLS_PATH)/libtabix.a" -lz -pthread
+SAMTOOLS_CPPFLAGS=-D_USE_KNETFILE -DBGZF_CACHE -D_FILE_OFFSET_BITS=64 \
+    -D_LARGEFILE64_SOURCE
 
-
-PKG_CPPFLAGS+=-DBGZF_CACHE
-PKG_CXXFLAGS+=-I../inst/include
+PKG_LIBS=$(SAMTOOLS_LIBS)
+PKG_CPPFLAGS=$(SAMTOOLS_CPPFLAGS) -I../inst/include

@@ -8,6 +8,7 @@
 #' @import Rcpp
 #' @import IRanges
 #' @import GenomicRanges
+#' @import zlibbioc
 #' @import methods
 #' @import BiocGenerics
 #' @docType package
@@ -71,19 +72,19 @@ setGeneric("bamCount", function(gr, bampath, ...) standardGeneric("bamCount"))
 #' @rdname bamsignals-methods
 #' @export
 setMethod("bamCount", c("GenomicRanges", "character"), 
-	function(gr, bampath, mapqual=0, shift=0, ss=FALSE, 
-	paired.end=FALSE, paired.end.midpoint=FALSE, 
-	paired.end.max.frag.length=1000, verbose=TRUE){
-		if (verbose) printStupidSentence(bampath)
-		
-		pu <- pileup_core(gr, bampath, mapqual, max(width(gr)), shift, ss, 
-		paired.end, paired.end.midpoint, paired.end.max.frag.length)
-		if (ss) {
-			dim(pu$counts) <- c(2, length(gr))
-			rownames(pu$counts) <- c("sense", "antisense")
-		}
-		return(pu$counts)
-	}
+    function(gr, bampath, mapqual=0, shift=0, ss=FALSE, 
+    paired.end=FALSE, paired.end.midpoint=FALSE, 
+    paired.end.max.frag.length=1000, verbose=TRUE){
+        if (verbose) printStupidSentence(bampath)
+        
+        pu <- pileup_core(gr, bampath, mapqual, max(width(gr)), shift, ss, 
+        paired.end, paired.end.midpoint, paired.end.max.frag.length)
+        if (ss) {
+            dim(pu$counts) <- c(2, length(gr))
+            rownames(pu$counts) <- c("sense", "antisense")
+        }
+        return(pu$counts)
+    }
 )
 
 
@@ -95,22 +96,22 @@ setGeneric("bamProfile", function(gr, bampath, ...) standardGeneric("bamProfile"
 #' @rdname bamsignals-methods
 #' @export
 setMethod("bamProfile", c("GenomicRanges", "character"), 
-	function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=FALSE, 
-	paired.end=FALSE, paired.end.midpoint=FALSE,
-	 paired.end.max.frag.length=1000, verbose=TRUE){
-		if (verbose) printStupidSentence(bampath)
-		
-		if (binsize < 1){
-			stop("provide a binsize greater or equal to 1")
-		} else if (binsize > 1 && any((width(gr) %% binsize) != 0)){
-			warning("some ranges' widths are not a multiple of the selected
-			 binsize, some bins will correspond to less than binsize basepairs")
-		}
+    function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=FALSE, 
+    paired.end=FALSE, paired.end.midpoint=FALSE,
+     paired.end.max.frag.length=1000, verbose=TRUE){
+        if (verbose) printStupidSentence(bampath)
+        
+        if (binsize < 1){
+            stop("provide a binsize greater or equal to 1")
+        } else if (binsize > 1 && any((width(gr) %% binsize) != 0)){
+            warning("some ranges' widths are not a multiple of the selected
+             binsize, some bins will correspond to less than binsize basepairs")
+        }
 
-		pu <- pileup_core(gr, bampath, mapqual, binsize, shift, ss, 
-		paired.end, paired.end.midpoint, paired.end.max.frag.length)
-		new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
-	}
+        pu <- pileup_core(gr, bampath, mapqual, binsize, shift, ss, 
+        paired.end, paired.end.midpoint, paired.end.max.frag.length)
+        new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
+    }
 )
 
 #' @export
@@ -121,23 +122,23 @@ setGeneric("bamCoverage", function(gr, bampath, ...) standardGeneric("bamCoverag
 #' @rdname bamsignals-methods
 #' @export
 setMethod("bamCoverage", c("GenomicRanges", "character"), 
-	function(gr, bampath, mapqual=0, paired.end=FALSE,
-	paired.end.max.frag.length=1000, verbose=TRUE){
-		if (verbose) printStupidSentence(bampath)
-		
-		pu <- coverage_core(gr, bampath, mapqual, paired.end, 
-		paired.end.max.frag.length)
-		new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
-	}
+    function(gr, bampath, mapqual=0, paired.end=FALSE,
+    paired.end.max.frag.length=1000, verbose=TRUE){
+        if (verbose) printStupidSentence(bampath)
+        
+        pu <- coverage_core(gr, bampath, mapqual, paired.end, 
+        paired.end.max.frag.length)
+        new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
+    }
 )
 
 sentences <- c(
-	"tHaT'S tHa fAStEsT pIlE-uP bAm iN tHe SoUth!!!",
-	"yOu cAn'T pIlE-Up FaStEr!!!",
-	"I'M gOnNa cHaSe'em and PiLe'em aLl up!!!",
-	"fOr brOoMmHiLdA!!!",
-	"tHe lEgEnD said, hE cOuLd PiLe uP fAsTeR thAn LiGht",
-	"I gEt gOoSeBuMPs wHen I seE yOu pilEuPpiNg...")
+    "tHaT'S tHa fAStEsT pIlE-uP bAm iN tHe SoUth!!!",
+    "yOu cAn'T pIlE-Up FaStEr!!!",
+    "I'M gOnNa cHaSe'em and PiLe'em aLl up!!!",
+    "fOr brOoMmHiLdA!!!",
+    "tHe lEgEnD said, hE cOuLd PiLe uP fAsTeR thAn LiGht",
+    "I gEt gOoSeBuMPs wHen I seE yOu pilEuPpiNg...")
 printStupidSentence <- function(path){
-	cat("Processing ", path, ": ", sample(sentences, 1), "\n", sep="")
+    message("Processing ", path, ": ", sample(sentences, 1))
 }
