@@ -8,7 +8,7 @@ get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
 
 ## THE FUNCTION 'count' ##
 #count how many reads map in each region (according to 5' end)
-v <- bamCount(genes, bampath)
+v <- bamCount(bampath, genes)
 #plot it
 labs <- paste0(seqnames(genes), ":", start(genes), "-", end(genes))
 par(mar=c(5, 6, 4, 2))
@@ -16,7 +16,7 @@ barplot(v, names.arg=labs, main="read counts per region", las=2,
 	horiz=TRUE, cex.names=.6)
 
 #distinguish between strands
-v2 <- bamCount(genes, bampath, ss=TRUE)
+v2 <- bamCount(bampath, genes, ss=TRUE)
 #plot it
 par(mar=c(5, 6, 4, 2))
 barplot(v2, names.arg=labs, main="read counts per region", las=2, 
@@ -26,9 +26,9 @@ barplot(v2, names.arg=labs, main="read counts per region", las=2,
 
 ## THE FUNCTIONS 'bamProfile' and 'bamCoverage' ##
 #count how many reads map to each base pair (according to 5' end)
-pu <- bamProfile(genes, bampath)
+pu <- bamProfile(bampath, genes)
 #count how many reads cover each base pair
-du <- bamCoverage(genes, bampath)
+du <- bamCoverage(bampath, genes)
 #plot it
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
@@ -43,18 +43,18 @@ legend("topright", llab, lty=c(1,2), bg="white")
 ## REGIONS OF THE SAME SIZE AND OPTIONS FOR 'bamProfile' ##
 proms <- promoters(genes, upstream=150, downstream=150)
 #pileup according to strand
-pu_ss <- bamProfile(proms, bampath, ss=TRUE)
+pu_ss <- bamProfile(bampath, proms, ss=TRUE)
 #compute average over regions
 avg_ss <- apply(alignSignals(pu_ss), 2, rowMeans)
 
 #profile using a strand-specific shift
-pu_shift <- bamProfile(proms, bampath, shift=75)
+pu_shift <- bamProfile(bampath, proms, shift=75)
 #compute average over regions
 avg_shift <- rowMeans(alignSignals(pu_shift))
 
 #profile using a strand-specific shift and a binning scheme
 binsize <- 20
-pu_shift_bin <- bamProfile(proms, bampath, shift=75, binsize=binsize)
+pu_shift_bin <- bamProfile(bampath, proms, shift=75, binsize=binsize)
 #compute average over regions
 avg_shift_bin <- rowMeans(alignSignals(pu_shift_bin))
 

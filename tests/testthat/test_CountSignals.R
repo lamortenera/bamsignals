@@ -1,8 +1,5 @@
 context("CountSignals class and methods")
 
-cs <- 1L:16L
-bks <- c(0L, 4L, 8L, 12L, 16L)
-
 getSig <- function(i, ss){
 	nums <- as.integer( ((i-1)*4 + 1) : (i*4) )
 	if (ss) matrix(nums, nrow=2, dimnames=list(c("sense", "antisense"), NULL))
@@ -22,7 +19,7 @@ expect_runs <- function(expr){
 
 test_that("Test CountSignals class and methods", {
 	for (ss in c(TRUE,FALSE)){
-		n <- new("CountSignals", counts=cs, breaks=bks, ss=ss)
+		n <- new("CountSignals", signals=lapply(1:4, getSig, ss=ss), ss=ss)
 
 		#see if method length works
 		expect_equal(length(n), 4)

@@ -4,10 +4,6 @@
 #include "samtools/sam.h"  
 
 //in C: true==1(or something different than 0), false==0
-//coding conventions:
-//iterator for type t and variable v: It, variable: i_v,
-//end of the iterator, e_v.
-//use classes, not structs. Name of a class starts with upper-case letter
 using namespace Rcpp;
 
 inline bool isNegStrand(const bam1_t *b){
@@ -148,32 +144,36 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samfile_t* in){
     }
 }
 
-static List allocateAndDistributeMemory(std::vector<GArray>& ranges, int binsize, bool ss){
+static List allocateList(std::vector<GArray>& ranges, int binsize, bool ss){
     int rnum = ranges.size();//number of ranges
     int mult = ss?2:1;
-    
-    //range i will be stored in the interval breaks[i]-breaks[i+1]
-    IntegerVector breaks(rnum+1);
+    double dbinsize = binsize;
+    //range i will be stored as the i-th element of sigs
+    List sigs(rnum);
+    //set the dimnames (this is needed only if ss==TRUE)
+    List dnames(2);
+    if (ss) dnames[0] = CharacterVector::create("sense", "antisense");
     
     //compute breaks and total length
-    double dbinsize = binsize;
-    int acc = 0; 
-    breaks[0] = acc; 
     for (int i = 0; i < rnum; ++i){
-        acc += mult*ceil(ranges[i].len/dbinsize);
-        if (acc < 0) Rcpp::stop("Integer overflow: genomic ranges too large");
-        breaks[i+1] = acc;
+        //the width does not depend on the 'ss' parameter
+        int width = ceil(ranges[i].len/dbinsize);
+        if (ss){
+          //if strand specific, allocate matrix
+          IntegerMatrix sig(2, width);
+          sig.attr("dimnames") = dnames;
+          sigs[i] = sig;
+          ranges[i].array = sig.begin(); 
+        } else {
+          //otherwise, allocate vector
+          IntegerVector sig(width);
+          sigs[i] = sig;
+          ranges[i].array = sig.begin(); 
+        }
+        //set the pointer of the range
+        ranges[i].alen = mult*width;
     }
-    
-    IntegerVector counts(acc);
-    int* countsptr = counts.begin();
-    
-    for (int i = 0; i < rnum; ++i){
-        ranges[i].array = countsptr + breaks[i]; 
-        ranges[i].alen = breaks[i+1] - breaks[i];
-    }
-    
-    return List::create(_("counts")=counts, _("breaks")=breaks, _("ss")=ss);
+    return sigs;
 }
 
 //if you forget to close the Bamfile you get a memory leak
@@ -258,15 +258,13 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<TRegion>& ranges, int m
                 //should never happen, unless the last reads returned by the iterator do not overlap with the queried interval
                 if (curr_range == chunk_end) break; 
                 
-                int r_end = bam_calend(&(read->core), bam1_cigar(read)) -1;
-                //go through the regions that overlap this read
+                int r_end = bam_calend(&(read->core), bam1_cigar(read)) - 1;
+                //go through the regions that might overlap this read
                 for (unsigned int range = curr_range; range < chunk_end && ranges[range].loc - shift <= r_end; ++range){
                     pileupper.pileup(ranges[range], read, r_start, r_end);
                 }
             }
-            
         }
-        
         bam_iter_destroy(iter);
         processed = chunk_end;
     }
@@ -376,9 +374,10 @@ class Coverager{
         //Construct the region of the fragment overlap
         int isize = (read->core).isize;
         bool negstrand = isNegStrand(read);
-        if (negstrand && isize < 0) {        //-strand read: only calculate if isize is meaningful, otherwise fall back to given start
+        //only calculate if isize is meaningful, otherwise fall back to given start
+        if (negstrand && isize < 0) {
             start = end + isize + 1;
-        } else if (!negstrand && isize > 0) { //+strand read: only calculate if isize is meaningful, otherwise fall back to given end (i.e. bam.c::bam_calend output)
+        } else if (!negstrand && isize > 0) {
             end   = start + isize - 1;
         }
         pileup(range, read, start, end);
@@ -435,8 +434,11 @@ class Pileupper{
     }
 };
 
+
+//this function is called by bamProfile and bamCount.
+//when it is bamCount, then binsize==max(width(gr))
 // [[Rcpp::export]]
-List pileup_core(RObject gr, std::string bampath, int mapqual=0, int binsize=1, int shift=0, bool ss=false, 
+List pileup_core(std::string bampath, RObject gr, int mapqual=0, int binsize=1, int shift=0, bool ss=false, 
     bool pe=false, bool pe_mid=false, int maxfraglength=1000, int maxgap=16385){
     std::vector<GArray> ranges;
     //opening bamfile and index
@@ -444,7 +446,7 @@ List pileup_core(RObject gr, std::string bampath, int mapqual=0, int binsize=1, 
     //adding regions to the vector
     parseRegions(ranges, gr, bfile.in);
     //allocate memory
-    List ret = allocateAndDistributeMemory(ranges, binsize, ss);
+    List ret = allocateList(ranges, binsize, ss);
     //pileup
     Pileupper p(binsize, shift, ss);
     if (pe) //use PairedEnd routine
@@ -458,14 +460,14 @@ List pileup_core(RObject gr, std::string bampath, int mapqual=0, int binsize=1, 
 }
 
 // [[Rcpp::export]]
-List coverage_core(RObject gr, std::string bampath, int mapqual=0, bool pe=false, int maxfraglength=1000, int maxgap=16385){
+List coverage_core(std::string bampath, RObject gr, int mapqual=0, bool pe=false, int maxfraglength=1000, int maxgap=16385){
     std::vector<GArray> ranges;
     //opening bamfile and index
     Bamfile bfile(bampath);
     //adding regions to the vector
     parseRegions(ranges, gr, bfile.in);
     //allocate memory
-    List ret = allocateAndDistributeMemory(ranges, 1, false);
+    List ret = allocateList(ranges, 1, false);
     //pileup
     Coverager c;
     if (pe)

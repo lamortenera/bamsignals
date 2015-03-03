@@ -21,10 +21,10 @@ NULL
 
 #' Functions for extracting count signals from a bam file.
 #'
-#' @param gr GenomicRanges object used to specify the regions
 #' @param bampath path to the bam file storing the read. The file must be
-#' indexed. If a range is on the negative strand the profile will be 
-#' reverse-complemented.
+#' indexed. 
+#' @param gr GenomicRanges object used to specify the regions. If a range is on
+#' the negative strand the profile will be reverse-complemented.
 #' @param binsize If the value is set to 1, the method will return 
 #' basepair-resolution read densities, for bigger values the density profiles
 #' will be binned (and the memory requirements will scale accordingly). 
@@ -66,37 +66,38 @@ NULL
 NULL
 
 #' @export
-setGeneric("bamCount", function(gr, bampath, ...) standardGeneric("bamCount"))
+setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 #' \code{bamCount}: for each range, count the reads whose 5' end map in it.
 #' @aliases bamCount
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamCount", c("GenomicRanges", "character"), 
-    function(gr, bampath, mapqual=0, shift=0, ss=FALSE, 
+setMethod("bamCount", c("character", "GenomicRanges"), 
+    function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
     paired.end=FALSE, paired.end.midpoint=FALSE, 
     paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
-        pu <- pileup_core(gr, bampath, mapqual, max(width(gr)), shift, ss, 
+        pu <- pileup_core(bampath, gr, mapqual, max(width(gr)), shift, ss, 
         paired.end, paired.end.midpoint, paired.end.max.frag.length)
+        counts <- unlist(pu)
         if (ss) {
-            dim(pu$counts) <- c(2, length(gr))
-            rownames(pu$counts) <- c("sense", "antisense")
+            dim(counts) <- c(2, length(gr))
+            rownames(counts) <- c("sense", "antisense")
         }
-        return(pu$counts)
+        counts
     }
 )
 
 
 #' @export
-setGeneric("bamProfile", function(gr, bampath, ...) standardGeneric("bamProfile"))
+setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"))
 #' \code{bamProfile}: for each base pair in the ranges, compute the number of reads
 #' whose 5' end maps there.
 #' @aliases bamProfile
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamProfile", c("GenomicRanges", "character"), 
-    function(gr, bampath, binsize=1, mapqual=0, shift=0, ss=FALSE, 
+setMethod("bamProfile", c("character", "GenomicRanges"), 
+    function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
     paired.end=FALSE, paired.end.midpoint=FALSE,
      paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
@@ -108,27 +109,27 @@ setMethod("bamProfile", c("GenomicRanges", "character"),
              binsize, some bins will correspond to less than binsize basepairs")
         }
 
-        pu <- pileup_core(gr, bampath, mapqual, binsize, shift, ss, 
+        pu <- pileup_core(bampath, gr, mapqual, binsize, shift, ss, 
         paired.end, paired.end.midpoint, paired.end.max.frag.length)
-        new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
+        new("CountSignals", signals=pu, ss=ss)
     }
 )
 
 #' @export
-setGeneric("bamCoverage", function(gr, bampath, ...) standardGeneric("bamCoverage"))
+setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverage"))
 #' \code{bamCoverage}: for each base pair in the ranges, compute the number of reads
 #' covering it.
 #' @aliases bamCoverage
 #' @rdname bamsignals-methods
 #' @export
-setMethod("bamCoverage", c("GenomicRanges", "character"), 
-    function(gr, bampath, mapqual=0, paired.end=FALSE,
+setMethod("bamCoverage", c("character", "GenomicRanges"), 
+    function(bampath, gr, mapqual=0, paired.end=FALSE,
     paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
-        pu <- coverage_core(gr, bampath, mapqual, paired.end, 
+        pu <- coverage_core(bampath, gr, mapqual, paired.end, 
         paired.end.max.frag.length)
-        new("CountSignals", counts=pu$counts, breaks=pu$breaks, ss=pu$ss)
+        new("CountSignals", signals=pu, ss=FALSE)
     }
 )
 

@@ -24,20 +24,20 @@ file.exists(gsub(".bam$", ".bam.bai", bampath))
 
 ## ------------------------------------------------------------------------
 proms <- GenomicRanges::promoters(genes, upstream=100, downstream=100)
-counts <- bamCount(proms, bampath, verbose=FALSE)
+counts <- bamCount(bampath, proms, verbose=FALSE)
 str(counts)
 
 ## ------------------------------------------------------------------------
-counts <- bamCount(proms, bampath, verbose=FALSE, shift=75)
+counts <- bamCount(bampath, proms, verbose=FALSE, shift=75)
 str(counts)
 
 ## ------------------------------------------------------------------------
 strand(proms)
-counts <- bamCount(proms, bampath, verbose=FALSE, ss=TRUE)
+counts <- bamCount(bampath, proms, verbose=FALSE, ss=TRUE)
 str(counts)
 
 ## ------------------------------------------------------------------------
-sigs <- bamProfile(genes, bampath, verbose=FALSE)
+sigs <- bamProfile(bampath, genes, verbose=FALSE)
 sigs
 
 ## ------------------------------------------------------------------------
@@ -51,7 +51,7 @@ stopifnot(all(sapply(sigs, sum) == sapply(lsigs, sum)))
 stopifnot(all(width(sigs)==width(genes)))
 
 ## ------------------------------------------------------------------------
-sssigs <- bamProfile(genes, bampath, verbose=FALSE, ss=TRUE)
+sssigs <- bamProfile(bampath, genes, verbose=FALSE, ss=TRUE)
 sssigs
 
 ## ------------------------------------------------------------------------
@@ -77,8 +77,8 @@ legend("topright", c("sense", "antisense", "both"),
 
 ## ------------------------------------------------------------------------
 #The promoter regions have all the same width
-sigs <- bamProfile(proms, bampath, ss=FALSE, verbose=FALSE)
-sssigs <- bamProfile(proms, bampath, ss=TRUE, verbose=FALSE)
+sigs <- bamProfile(bampath, proms, ss=FALSE, verbose=FALSE)
+sssigs <- bamProfile(bampath, proms, ss=TRUE, verbose=FALSE)
 
 sigsMat <- alignSignals(sigs)
 sigsArr <- alignSignals(sssigs)
@@ -110,7 +110,7 @@ legend("topright", c("sense", "antisense", "both"),
 ## ------------------------------------------------------------------------
 
 binsize <- 20
-binnedSigs <- bamProfile(proms, bampath, binsize=binsize)
+binnedSigs <- bamProfile(bampath, proms, binsize=binsize)
 stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs
 
@@ -126,8 +126,8 @@ legend("topright", c("base pair count", "bin count"), lty=c(1, 2))
 
 
 ## ------------------------------------------------------------------------
-covSigs <- bamCoverage(genes, bampath, verbose=FALSE)
-puSigs <- bamProfile(genes, bampath, verbose=FALSE)
+covSigs <- bamCoverage(bampath, genes, verbose=FALSE)
+puSigs <- bamProfile(bampath, genes, verbose=FALSE)
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
 main <- paste0("read coverage and profile of the region ", seqnames(genes)[1],
@@ -139,5 +139,5 @@ legend("topright", c("covering the base pair", "5' end maps to the base pair"),
 	lty=c(1,2))
 
 ## ------------------------------------------------------------------------
-counts <- bamCount(proms, bampath, mapq=20, verbose=FALSE)
+counts <- bamCount(bampath, proms, mapq=20, verbose=FALSE)
 

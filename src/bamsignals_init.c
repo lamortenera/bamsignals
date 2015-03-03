@@ -5,21 +5,15 @@
 
 #include <R_ext/Rdynload.h>
 
-SEXP bamsignals_getMatrix(SEXP xSEXP, SEXP idxSEXP);
-SEXP bamsignals_getVector(SEXP xSEXP, SEXP idxSEXP);
-SEXP bamsignals_getSubset(SEXP xSEXP, SEXP idxsSEXP);
-SEXP bamsignals_asList(SEXP xSEXP);
-SEXP bamsignals_fastWidth(SEXP xSEXP);
-SEXP bamsignals_pileup_core(SEXP grSEXP, SEXP bampathSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP peSEXP, SEXP pe_midSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
-SEXP bamsignals_coverage_core(SEXP grSEXP, SEXP bampathSEXP, SEXP mapqualSEXP, SEXP peSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
+SEXP bamsignals_checkList(SEXP lSEXP, SEXP ssSEXP);
+SEXP bamsignals_fastWidth(SEXP lSEXP, SEXP ssSEXP);
+SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP peSEXP, SEXP pe_midSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
+SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP peSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
 SEXP bamsignals_writeSamAsBamAndIndex(SEXP sampathSEXP, SEXP bampathSEXP);
 
 R_CallMethodDef callMethods[]  = {
-  {"bamsignals_getMatrix", (DL_FUNC) &bamsignals_getMatrix, 2},
-  {"bamsignals_getVector", (DL_FUNC) &bamsignals_getVector, 2},
-  {"bamsignals_getSubset", (DL_FUNC) &bamsignals_getSubset, 2},
-  {"bamsignals_asList", (DL_FUNC) &bamsignals_asList, 1},
-  {"bamsignals_fastWidth", (DL_FUNC) &bamsignals_fastWidth, 1},
+  {"bamsignals_checkList", (DL_FUNC) &bamsignals_checkList, 2},
+  {"bamsignals_fastWidth", (DL_FUNC) &bamsignals_fastWidth, 2},
   {"bamsignals_pileup_core", (DL_FUNC) &bamsignals_pileup_core, 10},
   {"bamsignals_coverage_core", (DL_FUNC) &bamsignals_coverage_core, 6},
   {"bamsignals_writeSamAsBamAndIndex", (DL_FUNC) &bamsignals_writeSamAsBamAndIndex, 2},

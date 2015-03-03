@@ -1,6 +1,8 @@
 #' Container for count signals
 #'
-#' This is usually the output of the methods in the bamsignals package. 
+#' This s4 class is a tiny wrapper around a normal list (stored in the
+#' \code{signals} slot) and it is the output of the methods in the
+#' bamsignals package. 
 #' Among other things the container provides an accessor method, 
 #' that returns single signals as vectors and matrices, and the 
 #' methods \code{as.list} and \code{alignSignals}, that convert the 
@@ -12,11 +14,10 @@
 #' a vector of indices.
 #' @param drop In case \code{i} is a vector of length 1, after subsetting, 
 #' collapse the CountSignal object to a single signal or not.
-#' @slot counts An integer vector containing all the concatenated signals
-#' @slot breaks An integer vector such that signal i corresponds to the 
-#' counts \code{counts[(breaks[i]+1):breaks[i+1]]}
 #' @slot ss A single boolean value indicating whether all
 #'     signals are strand-specific or not
+#' @slot signals A list of integer vectors (if \code{ss==TRUE}) or of integer
+#'     matrices, representing each signal
 #' @aliases CountSignals
 #' @seealso \code{\link{bamsignals-methods}} for the functions that produce 
 #' this object
@@ -24,29 +25,17 @@
 #' @example inst/examples/class_example.R
 #' @export
 setClass( "CountSignals", 
-    representation = representation( 
-        counts = "integer",
-        breaks = "integer",
-        ss = "logical" )
+    representation = representation(signals = "list", ss = "logical" )
 )
 
 
 setValidity( "CountSignals", 
     function(object) {
         x <- object
+        #check ss slot
         if (length(x@ss)!=1 || is.na(x@ss)) return("invalid ss slot")
-        len <- length(x@breaks)-1
-        if (len < 0 || x@breaks[1]!=0 || x@breaks[len+1] != length(x@counts)) {
-            return("breaks first element must be 0 
-            and the last must be length(x@counts)")
-        }
-        if (len > 0){
-            d <- diff(x@breaks)
-            if (any(d) < 0) return("breaks must be increasing numbers")
-            if (x@ss && any(d %% 2 == 1)) {
-                return("odd number of elements in a strand-specific signal...")
-            }
-        }
+        #check signals slot (must be written in C)
+        if (!checkList(x@signals, x@ss)) return("invalid list")
         TRUE
     }
 )
@@ -54,7 +43,7 @@ setValidity( "CountSignals",
 #' @describeIn CountSignals Number of contained signals
 #' @aliases length
 #' @export
-setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
+setMethod("length", "CountSignals", function(x) length(x@signals))
 
 #' @describeIn CountSignals Width of each signal. If the CountSignals
 #' object \code{csig} is strand-specific then
@@ -62,7 +51,9 @@ setMethod("length", "CountSignals", function(x) length(x@breaks)-1)
 #' \code{width(csig)[i] = length(csig[i])}.
 #' @aliases width
 #' @export
-setMethod("width", "CountSignals", function(x) fastWidth(x))
+setMethod("width", "CountSignals", function(x) {
+    fastWidth(x@signals, x@ss)
+})
 
 #' @describeIn CountSignals Access single signals or subset the CountSignals 
 #' object.
@@ -77,13 +68,11 @@ setMethod("width", "CountSignals", function(x) fastWidth(x))
 setMethod("[", "CountSignals", 
     function(x, i, drop=TRUE){
         if (length(i)==1 && drop){
-            if (x@ss) {
-                return(getMatrix(x, i))
-            }    else  {return(getVector(x, i))}
-        } 
-        
-        largs <- getSubset(x, as.integer(i))
-        new("CountSignals", counts=largs$counts, breaks=largs$breaks, ss=largs$ss)
+            return(x@signals[[i]])
+        } else {
+            subsigs <- x@signals[i]
+            return(new("CountSignals", signals=subsigs, ss=x@ss))
+        }
     }
 )
 
@@ -93,7 +82,7 @@ setMethod("[", "CountSignals",
 #' @export
 setMethod("as.list", "CountSignals",
     #it should be using the generic defined in BiocGenerics
-    function(x) asList(x)
+    function(x) x@signals
 )
 
 #' Converts the container to a list \code{l} such that
@@ -104,7 +93,7 @@ setMethod("as.list", "CountSignals",
 #' @return a list \code{l} such that
 #' \code{l[[i]]} is \code{x[i]}.
 #' @export
-as.list.CountSignals <- function(x, ...) {asList(x)}
+as.list.CountSignals <- function(x, ...) {x@signals}
 
 #' @export
 setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
@@ -117,20 +106,9 @@ setGeneric("alignSignals", function(x) standardGeneric("alignSignals"))
 #' @export
 setMethod("alignSignals", "CountSignals",
     function(x){
-        lens <- diff(x@breaks)
-        if (any(lens[1] != lens)) stop("all signals must have the same length")
-        lastDim <- length(x)
-        firstDims <- length(x@counts)/lastDim
-        if (x@ss){
-            ret <- x@counts
-            dim(ret) <- c(2, firstDims/2, lastDim)
-            dimnames(ret) <- list(c("sense", "antisense"), NULL, NULL)
-            ret
-        } else {
-            ret <- x@counts
-            dim(ret) <- c(firstDims, lastDim)
-            ret
-        }
+        ws <- width(x)
+        if (any(ws != ws[1])) stop("all signals must have the same length")
+        simplify2array(x@signals)
     }
 )
 

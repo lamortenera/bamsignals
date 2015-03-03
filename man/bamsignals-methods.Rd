@@ -3,33 +3,33 @@
 \docType{methods}
 \name{bamsignals-methods}
 \alias{bamCount}
-\alias{bamCount,GenomicRanges,character-method}
+\alias{bamCount,character,GenomicRanges-method}
 \alias{bamCoverage}
-\alias{bamCoverage,GenomicRanges,character-method}
+\alias{bamCoverage,character,GenomicRanges-method}
 \alias{bamProfile}
-\alias{bamProfile,GenomicRanges,character-method}
+\alias{bamProfile,character,GenomicRanges-method}
 \alias{bamsignals-methods}
 \title{Functions for extracting count signals from a bam file.}
 \usage{
-\S4method{bamCount}{GenomicRanges,character}(gr, bampath, mapqual = 0,
+\S4method{bamCount}{character,GenomicRanges}(bampath, gr, mapqual = 0,
   shift = 0, ss = FALSE, paired.end = FALSE,
   paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
   verbose = TRUE)
 
-\S4method{bamProfile}{GenomicRanges,character}(gr, bampath, binsize = 1,
+\S4method{bamProfile}{character,GenomicRanges}(bampath, gr, binsize = 1,
   mapqual = 0, shift = 0, ss = FALSE, paired.end = FALSE,
   paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
   verbose = TRUE)
 
-\S4method{bamCoverage}{GenomicRanges,character}(gr, bampath, mapqual = 0,
+\S4method{bamCoverage}{character,GenomicRanges}(bampath, gr, mapqual = 0,
   paired.end = FALSE, paired.end.max.frag.length = 1000, verbose = TRUE)
 }
 \arguments{
-\item{gr}{GenomicRanges object used to specify the regions}
-
 \item{bampath}{path to the bam file storing the read. The file must be
-indexed. If a range is on the negative strand the profile will be
-reverse-complemented.}
+indexed.}
+
+\item{gr}{GenomicRanges object used to specify the regions. If a range is on
+the negative strand the profile will be reverse-complemented.}
 
 \item{mapqual}{discard reads with mapping quality strictly lower than this
 parameter. The value 0 ensures that no read will be discarded, the value 254
@@ -99,7 +99,7 @@ get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
 
 ## THE FUNCTION 'count' ##
 #count how many reads map in each region (according to 5' end)
-v <- bamCount(genes, bampath)
+v <- bamCount(bampath, genes)
 #plot it
 labs <- paste0(seqnames(genes), ":", start(genes), "-", end(genes))
 par(mar=c(5, 6, 4, 2))
@@ -107,7 +107,7 @@ barplot(v, names.arg=labs, main="read counts per region", las=2,
 	horiz=TRUE, cex.names=.6)
 
 #distinguish between strands
-v2 <- bamCount(genes, bampath, ss=TRUE)
+v2 <- bamCount(bampath, genes, ss=TRUE)
 #plot it
 par(mar=c(5, 6, 4, 2))
 barplot(v2, names.arg=labs, main="read counts per region", las=2, 
@@ -117,9 +117,9 @@ barplot(v2, names.arg=labs, main="read counts per region", las=2,
 
 ## THE FUNCTIONS 'bamProfile' and 'bamCoverage' ##
 #count how many reads map to each base pair (according to 5' end)
-pu <- bamProfile(genes, bampath)
+pu <- bamProfile(bampath, genes)
 #count how many reads cover each base pair
-du <- bamCoverage(genes, bampath)
+du <- bamCoverage(bampath, genes)
 #plot it
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
@@ -134,18 +134,18 @@ legend("topright", llab, lty=c(1,2), bg="white")
 ## REGIONS OF THE SAME SIZE AND OPTIONS FOR 'bamProfile' ##
 proms <- promoters(genes, upstream=150, downstream=150)
 #pileup according to strand
-pu_ss <- bamProfile(proms, bampath, ss=TRUE)
+pu_ss <- bamProfile(bampath, proms, ss=TRUE)
 #compute average over regions
 avg_ss <- apply(alignSignals(pu_ss), 2, rowMeans)
 
 #profile using a strand-specific shift
-pu_shift <- bamProfile(proms, bampath, shift=75)
+pu_shift <- bamProfile(bampath, proms, shift=75)
 #compute average over regions
 avg_shift <- rowMeans(alignSignals(pu_shift))
 
 #profile using a strand-specific shift and a binning scheme
 binsize <- 20
-pu_shift_bin <- bamProfile(proms, bampath, shift=75, binsize=binsize)
+pu_shift_bin <- bamProfile(bampath, proms, shift=75, binsize=binsize)
 #compute average over regions
 avg_shift_bin <- rowMeans(alignSignals(pu_shift_bin))
 

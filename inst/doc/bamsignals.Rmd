@@ -56,7 +56,7 @@ Let's count how many reads map to the promoter regions of our genes. Using the `
 
 ```{r}
 proms <- GenomicRanges::promoters(genes, upstream=100, downstream=100)
-counts <- bamCount(proms, bampath, verbose=FALSE)
+counts <- bamCount(bampath, proms, verbose=FALSE)
 str(counts)
 ```
 The object `counts` is a vector of the same length as the number of ranges that we are analyzing, the `i`-th count corresponds to the `i`-th range.
@@ -65,7 +65,7 @@ The object `counts` is a vector of the same length as the number of ranges that 
 With the `bamCount()` function a read is counted in a range if the 5' end of the read falls in that range. This might be appropriate when analyzing DNase I hypersensitivity tags, however for ChIP-seq data the immunoprecipitated protein is normally located downstream with respect to the 5' end of the sequenced reads. To correct for that, it is possible to count reads with a strand-specific shift, _i.e._ reads will be counted in a range if the shifted 5' end falls in that range. Note that this shift will move reads mapped to the positive strand to the right and reads mapped to the negative strand to the left with respect to the reference orientation. The shift should correspond approximately to half of the average length of the fragments in the sequencing experiment.
 
 ```{r}
-counts <- bamCount(proms, bampath, verbose=FALSE, shift=75)
+counts <- bamCount(bampath, proms, verbose=FALSE, shift=75)
 str(counts)
 ```
 
@@ -74,7 +74,7 @@ Sometimes it is necessary to consider the two genomic strands separately. This i
 
 ```{r}
 strand(proms)
-counts <- bamCount(proms, bampath, verbose=FALSE, ss=TRUE)
+counts <- bamCount(bampath, proms, verbose=FALSE, ss=TRUE)
 str(counts)
 ```
 
@@ -84,7 +84,7 @@ Now `counts` is a matrix with two rows, one for the sense strand, the other for 
 
 If you are interested in counting how many reads map to each base pair of your genes, the `bamProfile()` function might save you a day.
 ```{r}
-sigs <- bamProfile(genes, bampath, verbose=FALSE)
+sigs <- bamProfile(bampath, genes, verbose=FALSE)
 sigs
 ```
 The `CountSignals` class is a read-only container for count vectors. Conceptually it is like a `list` of vectors, and in fact it can be immediately converted to that format.
@@ -105,7 +105,7 @@ stopifnot(all(width(sigs)==width(genes)))
 ### Counting on each strand separately
 As for the `bamCount()` function, the reads can be counted for each strand separately
 ```{r}
-sssigs <- bamProfile(genes, bampath, verbose=FALSE, ss=TRUE)
+sssigs <- bamProfile(bampath, genes, verbose=FALSE, ss=TRUE)
 sssigs
 ```
 Now each signal is a matrix with two rows.
@@ -136,8 +136,8 @@ legend("topright", c("sense", "antisense", "both"),
 In case our ranges have all the same width, a `CountSignals` object can be immediately converted into a matrix, or an array, with the `alignSignals` function
 ```{r}
 #The promoter regions have all the same width
-sigs <- bamProfile(proms, bampath, ss=FALSE, verbose=FALSE)
-sssigs <- bamProfile(proms, bampath, ss=TRUE, verbose=FALSE)
+sigs <- bamProfile(bampath, proms, ss=FALSE, verbose=FALSE)
+sssigs <- bamProfile(bampath, proms, ss=TRUE, verbose=FALSE)
 
 sigsMat <- alignSignals(sigs)
 sigsArr <- alignSignals(sssigs)
@@ -178,7 +178,7 @@ Very often it is better to count reads mapping to small regions instead of singl
 ```{r}
 
 binsize <- 20
-binnedSigs <- bamProfile(proms, bampath, binsize=binsize)
+binnedSigs <- bamProfile(bampath, proms, binsize=binsize)
 stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs
 ```
@@ -201,8 +201,8 @@ legend("topright", c("base pair count", "bin count"), lty=c(1, 2))
 
 Instead of counting the 5' end of each read, you may want to count how many reads overlap each base pair, you should check out the `bamCoverage()` function.
 ```{r}
-covSigs <- bamCoverage(genes, bampath, verbose=FALSE)
-puSigs <- bamProfile(genes, bampath, verbose=FALSE)
+covSigs <- bamCoverage(bampath, genes, verbose=FALSE)
+puSigs <- bamProfile(bampath, genes, verbose=FALSE)
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
 main <- paste0("read coverage and profile of the region ", seqnames(genes)[1],
@@ -225,5 +225,5 @@ All bamsignal count, profile and coverage methods discussed above support dealin
 Most mapping software (_e.g._ bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the `mapq` argument is helpful.
 
 ```{r}
-counts <- bamCount(proms, bampath, mapq=20, verbose=FALSE)
+counts <- bamCount(bampath, proms, mapq=20, verbose=FALSE)
 ```

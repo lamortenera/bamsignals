@@ -75,8 +75,8 @@ test_that("bamCount function", {
 							label=paste0("bamCount{", 
 							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
 							"}"),
-							countR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							bamCount(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
+							countR(reads, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
+							bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
 	}	}	}	}	}
 })
 
@@ -90,8 +90,8 @@ test_that("bamProfile function", {
 							label=paste0("bamProfile{", 
 							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
 							"}"),
-							profileR(regions, reads, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							as.list(bamProfile(regions, bampath, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
+							profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
+							as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
 	}	}	}	}	}
 })
 
@@ -101,8 +101,8 @@ test_that("bamCoverage function", {
 		for (pe in c(TRUE, FALSE)){
 				expect_equal(
 					label=paste0("bamCoverage{mapq=",mapq, ", pe=", pe, "}"),
-					coverageR(regions, reads, paired.end=pe, mapqual=mapq), 
-					as.list(bamCoverage(regions, bampath, paired.end=pe, mapqual=mapq, verbose=FALSE)))
+					coverageR(reads, regions, paired.end=pe, mapqual=mapq), 
+					as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, verbose=FALSE)))
 	}	}
 })
 

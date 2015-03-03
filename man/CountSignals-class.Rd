@@ -39,7 +39,9 @@ collapse the CountSignal object to a single signal or not.}
 return values are described in the Methods section.
 }
 \description{
-This is usually the output of the methods in the bamsignals package.
+This s4 class is a tiny wrapper around a normal list (stored in the
+\code{signals} slot) and it is the output of the methods in the
+bamsignals package.
 Among other things the container provides an accessor method,
 that returns single signals as vectors and matrices, and the
 methods \code{as.list} and \code{alignSignals}, that convert the
@@ -76,13 +78,11 @@ object \code{csig} is strand-specific, the result is an array of dimensions
 \section{Slots}{
 
 \describe{
-\item{\code{counts}}{An integer vector containing all the concatenated signals}
-
-\item{\code{breaks}}{An integer vector such that signal i corresponds to the
-counts \code{counts[(breaks[i]+1):breaks[i+1]]}}
-
 \item{\code{ss}}{A single boolean value indicating whether all
 signals are strand-specific or not}
+
+\item{\code{signals}}{A list of integer vectors (if \code{ss==TRUE}) or of integer
+matrices, representing each signal}
 }}
 \examples{
 #get a CountSignals object
@@ -91,7 +91,7 @@ bampath <-
 system.file("extdata", "randomBam.bam", package="bamsignals")
 genes <- 
 get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
-csig <- bamProfile(genes, bampath, ss=TRUE)
+csig <- bamProfile(bampath, genes, ss=TRUE)
 
 #show it
 show(csig)
@@ -113,7 +113,7 @@ siglist <- as.list(csig)
 
 #get regions and signals of the same width
 proms <- promoters(genes, upstream=150, downstream=150)
-csig <- bamCoverage(proms, bampath)
+csig <- bamCoverage(bampath, proms)
 
 #convert to matrix
 mat <- alignSignals(csig)
