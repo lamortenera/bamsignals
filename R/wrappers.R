@@ -36,17 +36,19 @@ NULL
 #' @param ss produce a strand-specific profile or ignore the strand of the read.
 #' This option does not have any effect on the strand of the region. 
 #' Strand-specific profiles are twice as long then strand-independent profiles.
-#' @param paired.end a logical value indicating whether the bampath contains 
-#' paired-end sequencing output. In this case, only first reads in proper mapped
-#' pairs are considered. 
-#' @param paired.end.midpoint a logical value indicating whether the fragment 
-#' middle points of each fragment should be counted. Therefore it uses the tlen 
-#' information from the given bam file 
-#' (MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen, 
-#' the given midpoint will be moved of 0.5 basepairs in the 3' direction.
-#' @param paired.end.max.frag.length an integer indicating which fragments 
-#' should be considered in paired-end sequencing data. Default value of 1,000 
-#' bases is generally a good pick.
+#' @param paired.end a character string indicating how to handle paired-end 
+#' reads. If \code{paired.end!="ignore"} then only first reads in proper mapped
+#' pairs will be consider (i.e. in the flag of the read, the bits in the mask 
+#' 66 must be all ones). If \code{paired.end=="midpoint"} then the midpoint of a
+#' fragment is considered, where \code{mid = fragment_start + int(abs(tlen)/2)},
+#' and where tlen is the template length stored in the bam file. For even tlen,
+#' the given midpoint will be moved of 0.5 basepairs in the 3' direction. 
+#' If \code{paired.end=="extend"} then the whole fragment is treated 
+#' as a single read.
+#' @param paired.end.max.frag.length the maximum length between left-, and 
+#' right-most mapping position of a paired read. This is considered only when 
+#' \code{paired.end} is either \code{"extend"} or \code{"midpoint"}. The default value is 
+#' generally a good pick.
 #' @param verbose a logical value indicating whether verbose output is desired
 #' @return \itemize{
 #'   \item \code{bamProfile} and \code{bamCoverage}: a CountSignals object with a signal 
@@ -65,6 +67,15 @@ NULL
 #' @example inst/examples/methods_example.R
 NULL
 
+#helper functions to set the right flag
+flagMask <- function(paired.end){
+  #considers only the first read in a properly mapped pair
+  if (paired.end != "ignore") return(66L)
+  #considers all reads
+  0L
+}
+
+
 #' @export
 setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 #' \code{bamCount}: for each range, count the reads whose 5' end map in it.
@@ -73,12 +84,15 @@ setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 #' @export
 setMethod("bamCount", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
-    paired.end=FALSE, paired.end.midpoint=FALSE, 
+    paired.end=c("ignore", "filter", "midpoint"), 
     paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
+        pe <- match.arg(paired.end)
+        
         pu <- pileup_core(bampath, gr, mapqual, max(width(gr)), shift, ss, 
-        paired.end, paired.end.midpoint, paired.end.max.frag.length)
+        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
+        
         counts <- unlist(pu)
         if (ss) {
             dim(counts) <- c(2, length(gr))
@@ -98,8 +112,8 @@ setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"
 #' @export
 setMethod("bamProfile", c("character", "GenomicRanges"), 
     function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
-    paired.end=FALSE, paired.end.midpoint=FALSE,
-     paired.end.max.frag.length=1000, verbose=TRUE){
+    paired.end=c("ignore", "filter", "midpoint"),
+    paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         if (binsize < 1){
@@ -109,8 +123,11 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
              binsize, some bins will correspond to less than binsize basepairs")
         }
 
+        pe <- match.arg(paired.end)
+        
         pu <- pileup_core(bampath, gr, mapqual, binsize, shift, ss, 
-        paired.end, paired.end.midpoint, paired.end.max.frag.length)
+        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
+        
         new("CountSignals", signals=pu, ss=ss)
     }
 )
@@ -123,12 +140,15 @@ setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverag
 #' @rdname bamsignals-methods
 #' @export
 setMethod("bamCoverage", c("character", "GenomicRanges"), 
-    function(bampath, gr, mapqual=0, paired.end=FALSE,
+    function(bampath, gr, mapqual=0, paired.end=c("ignore", "extend"),
     paired.end.max.frag.length=1000, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
-        pu <- coverage_core(bampath, gr, mapqual, paired.end, 
+        pe <- match.arg(paired.end)
+        
+        pu <- coverage_core(bampath, gr, mapqual, flagMask(pe), (pe=="extend"),
         paired.end.max.frag.length)
+        
         new("CountSignals", signals=pu, ss=FALSE)
     }
 )

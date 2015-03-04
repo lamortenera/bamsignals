@@ -121,18 +121,19 @@ readsToBam <- function(reads, bampath, refs=NULL){
 
 #convert the reads to a GRanges object
 df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, mapqual=0){
-	if (paired.end.midpoint && !paired.end) 
-		stop("paired.end.midpoint can only be used with paired.end")
-	if (paired.end && !isPEData(reads)) 
-		stop("paired.end options used with single end data...")
-
+  if (!paired.end %in% c("ignore", "filter", "midpoint", "extend"))
+    stop("invalid paired.end option")
+	
 	#filter based on mapqual
 	reads <- reads[reads$mapq>=mapqual,]
 	
 	#if paired.end, discard reads that are not the first read in the pair
-	#and do as if the pair was a single read
-	if (paired.end) {
+	if (paired.end != "ignore") {
 		reads <- reads[reads$read1,]
+  }
+  
+  #do as if the pair was a single read
+	if (paired.end %in% c("extend", "midpoint")){
 		isNeg <- reads$strand=="-"
 		#shift back negative reads
 		reads[isNeg,]$pos <- reads[isNeg,]$pos - abs(reads[isNeg,]$isize) + reads[isNeg,]$qwidth
@@ -144,7 +145,7 @@ df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, m
 	gr <- GRanges(seqnames=reads$rname, strand=reads$strand, IRanges(start=reads$pos, width=reads$qwidth))
 	
 	#if paired.end.midpoint, consider only the midpoint
-	if (paired.end.midpoint){
+	if (paired.end == "midpoint"){
 		mids <- (start(gr) + end(gr))/2
 		#take care of the rounding
 		signedMids <- mids*(2*as.integer(strand(gr)=="+")-1)

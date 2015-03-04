@@ -12,17 +12,16 @@
 \title{Functions for extracting count signals from a bam file.}
 \usage{
 \S4method{bamCount}{character,GenomicRanges}(bampath, gr, mapqual = 0,
-  shift = 0, ss = FALSE, paired.end = FALSE,
-  paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
-  verbose = TRUE)
+  shift = 0, ss = FALSE, paired.end = c("ignore", "filter", "midpoint"),
+  paired.end.max.frag.length = 1000, verbose = TRUE)
 
 \S4method{bamProfile}{character,GenomicRanges}(bampath, gr, binsize = 1,
-  mapqual = 0, shift = 0, ss = FALSE, paired.end = FALSE,
-  paired.end.midpoint = FALSE, paired.end.max.frag.length = 1000,
-  verbose = TRUE)
+  mapqual = 0, shift = 0, ss = FALSE, paired.end = c("ignore", "filter",
+  "midpoint"), paired.end.max.frag.length = 1000, verbose = TRUE)
 
 \S4method{bamCoverage}{character,GenomicRanges}(bampath, gr, mapqual = 0,
-  paired.end = FALSE, paired.end.max.frag.length = 1000, verbose = TRUE)
+  paired.end = c("ignore", "extend"), paired.end.max.frag.length = 1000,
+  verbose = TRUE)
 }
 \arguments{
 \item{bampath}{path to the bam file storing the read. The file must be
@@ -42,19 +41,20 @@ This can be handy in the analysis of chip-seq data.}
 This option does not have any effect on the strand of the region.
 Strand-specific profiles are twice as long then strand-independent profiles.}
 
-\item{paired.end}{a logical value indicating whether the bampath contains
-paired-end sequencing output. In this case, only first reads in proper mapped
-pairs are considered.}
+\item{paired.end}{a character string indicating how to handle paired-end
+reads. If \code{paired.end!="ignore"} then only first reads in proper mapped
+pairs will be consider (i.e. in the flag of the read, the bits in the mask
+66 must be all ones). If \code{paired.end=="midpoint"} then the midpoint of a
+fragment is considered, where \code{mid = fragment_start + int(abs(tlen)/2)},
+and where tlen is the template length stored in the bam file. For even tlen,
+the given midpoint will be moved of 0.5 basepairs in the 3' direction.
+If \code{paired.end=="extend"} then the whole fragment is treated
+as a single read.}
 
-\item{paired.end.midpoint}{a logical value indicating whether the fragment
-middle points of each fragment should be counted. Therefore it uses the tlen
-information from the given bam file
-(MidPoint = fragment_start + int( abs(tlen) / 2) )). For even tlen,
-the given midpoint will be moved of 0.5 basepairs in the 3' direction.}
-
-\item{paired.end.max.frag.length}{an integer indicating which fragments
-should be considered in paired-end sequencing data. Default value of 1,000
-bases is generally a good pick.}
+\item{paired.end.max.frag.length}{the maximum length between left-, and
+right-most mapping position of a paired read. This is considered only when
+\code{paired.end} is either \code{"extend"} or \code{"midpoint"}. The default value is
+generally a good pick.}
 
 \item{verbose}{a logical value indicating whether verbose output is desired}
 
