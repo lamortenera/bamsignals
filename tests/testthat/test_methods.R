@@ -15,27 +15,27 @@ nRemove <- 1e3 #remove random reads from the pairs
 bampath <- paste0(tempfile(), ".bam") #path where to save the bam file
 
 ##regions
-nRegions <- 20		#number of regions
-avgRegLen <- 200	#average region length
+nRegions <- 20    #number of regions
+avgRegLen <- 200  #average region length
 
 
 #generate reads
 posReads <- data.frame(
-	rname=sample(nRef, nPairs, replace=TRUE),			#chromosome name
-	pos=sample(lastStart, nPairs, replace=TRUE),	#start of the read
-	qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),		#length of the read
-	strand=rep("+", nPairs), 											#strand
-	isize=1+rpois(nPairs, lambda=(avgFLen-1)),		#template (or fragment) length
-	read1=(sample(2, nPairs, replace=TRUE)==1),		#is it the first read in the pair?
-	mapq=sample(254, nPairs, replace=TRUE))				#mapping quality
+  rname=sample(nRef, nPairs, replace=TRUE),      #chromosome name
+  pos=sample(lastStart, nPairs, replace=TRUE),  #start of the read
+  qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),    #length of the read
+  strand=rep("+", nPairs),                       #strand
+  isize=1+rpois(nPairs, lambda=(avgFLen-1)),    #template (or fragment) length
+  read1=(sample(2, nPairs, replace=TRUE)==1),    #is it the first read in the pair?
+  mapq=sample(254, nPairs, replace=TRUE))        #mapping quality
 
 negReads <- data.frame(
-	rname=posReads$rname,
-	qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),
-	strand=rep("-", nPairs),
-	isize=-posReads$isize,
-	read1=!posReads$read1,
-	mapq=sample(254, nPairs, replace=TRUE))
+  rname=posReads$rname,
+  qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),
+  strand=rep("-", nPairs),
+  isize=-posReads$isize,
+  read1=!posReads$read1,
+  mapq=sample(254, nPairs, replace=TRUE))
 negReads$pos <- posReads$pos + posReads$isize - negReads$qwidth
 
 reads <- rbind(posReads, negReads)
@@ -47,63 +47,61 @@ readsToBam(reads, bampath)
 
 #generate regions
 regions <- GRanges(
-	seqnames=sample(nRef, nRegions, replace=TRUE),
-	strand=sample(c("+", "-"), nRegions, replace=TRUE),
-	ranges=IRanges(
-		start=sample(lastStart, nRegions, replace=TRUE), 
-		width=1+rpois(nRegions, lambda=(avgRegLen-1))))
+  seqnames=sample(nRef, nRegions, replace=TRUE),
+  strand=sample(c("+", "-"), nRegions, replace=TRUE),
+  ranges=IRanges(
+    start=sample(lastStart, nRegions, replace=TRUE), 
+    width=1+rpois(nRegions, lambda=(avgRegLen-1))))
 
 
 
 getPem <- function(pe){
-	if (pe) return(c(TRUE, FALSE))
-	FALSE
+  if (pe) return(c(TRUE, FALSE))
+  FALSE
 }
 
 argsToStr <- function(args){
-	vals <- sapply(args, get, envir=globalenv())
-	paste(collapse=",", sep="=", args, vals)
+  vals <- sapply(args, get, envir=globalenv())
+  paste(collapse=",", sep="=", args, vals)
 }
 
 test_that("bamCount function", {
-	for (shift in c(0, 100)){
-		for (mapq in c(0, 100)){
-			for (ss in c(TRUE, FALSE)){
-				for (pe in c(TRUE, FALSE)){
-					for (pem in getPem(pe)){
-						expect_equal(
-							label=paste0("bamCount{", 
-							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
-							"}"),
-							countR(reads, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE))
-	}	}	}	}	}
+  for (shift in c(0, 100)){
+    for (mapq in c(0, 100)){
+      for (ss in c(FALSE, TRUE)){
+        for (pe in c("ignore", "filter", "midpoint")){
+          expect_equal(
+            label=paste0("bamCount{", 
+            paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, sep="="),
+            "}"),
+            countR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq), 
+            bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, verbose=FALSE))
+  }  }  }  }
 })
 
 test_that("bamProfile function", {
-	for (shift in c(0, 100)){
-		for (mapq in c(0, 100)){
-			for (ss in c(TRUE, FALSE)){
-				for (pe in c(TRUE, FALSE)){
-					for (pem in getPem(pe)){
-						expect_equal(
-							label=paste0("bamProfile{", 
-							paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, "pem", pem, sep="="),
-							"}"),
-							profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq), 
-							as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, paired.end.midpoint=pem, mapqual=mapq, verbose=FALSE)))
-	}	}	}	}	}
+  for (shift in c(0, 100)){
+    for (mapq in c(0, 100)){
+      for (ss in c(FALSE, TRUE)){
+        for (pe in c("ignore", "filter", "midpoint")){
+          expect_equal(
+            label=paste0("bamProfile{", 
+            paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, sep="="),
+            "}"),
+            profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq), 
+            as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, verbose=FALSE)))
+  }  }  }  }
 })
 
 
 test_that("bamCoverage function", {
-	for (mapq in c(0, 100)){
-		for (pe in c(TRUE, FALSE)){
-				expect_equal(
-					label=paste0("bamCoverage{mapq=",mapq, ", pe=", pe, "}"),
-					coverageR(reads, regions, paired.end=pe, mapqual=mapq), 
-					as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, verbose=FALSE)))
-	}	}
+  for (mapq in c(0, 100)){
+    for (pe in c("ignore", "extend")){
+      expect_equal(
+        label=paste0("bamCoverage{mapq=",mapq, ", pe=", pe, "}"),
+        coverageR(reads, regions, paired.end=pe, mapqual=mapq), 
+        as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, verbose=FALSE)))
+  }  }
 })
 
 #remove the temporary files

@@ -10,7 +10,7 @@
 
 <meta name="author" content="Alessandro Mammana and Johannes Helmuth" />
 
-<meta name="date" content="2015-03-03" />
+<meta name="date" content="2015-03-04" />
 
 <title>Introduction to the bamsignals package</title>
 
@@ -43,7 +43,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="header">
 <h1 class="title">Introduction to the bamsignals package</h1>
 <h4 class="author"><em>Alessandro Mammana and Johannes Helmuth</em></h4>
-<h4 class="date"><em>2015-03-03</em></h4>
+<h4 class="date"><em>2015-03-04</em></h4>
 </div>
 
 <div id="TOC">
@@ -281,7 +281,7 @@ legend(&quot;topright&quot;, c(&quot;sense&quot;, &quot;antisense&quot;, &quot;b
 <p>Very often it is better to count reads mapping to small regions instead of single base pairs. Bins are small non-overlapping regions of fixed size tiling a larger region. Instead of splitting your regions of interest into bins, it is easier and much more efficient to provide the <code>binsize</code> option to <code>bamProfile()</code>.</p>
 <pre class="r"><code>binsize &lt;- 20
 binnedSigs &lt;- bamProfile(bampath, proms, binsize=binsize)</code></pre>
-<pre><code>## Processing /project/ale/home/data/bamsignals_pkg/bamsignals/inst/extdata/randomBam.bam: I gEt gOoSeBuMPs wHen I seE yOu pilEuPpiNg...</code></pre>
+<pre><code>## Processing /project/ale/home/data/bamsignals_pkg/bamsignals/inst/extdata/randomBam.bam: I'M gOnNa cHaSe'em and PiLe'em aLl up!!!</code></pre>
 <pre class="r"><code>stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs</code></pre>
 <pre><code>## CountSignals object with 49 signals
@@ -330,11 +330,11 @@ legend(&quot;topright&quot;, c(&quot;covering the base pair&quot;, &quot;5' end 
 <h1>Notes</h1>
 <div id="paired-end-data-handling" class="section level2">
 <h2>Paired end data handling</h2>
-<p>All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With <code>paired.end=TRUE</code>, only the first read in a properly aligned pair is considered. The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For <code>bamCoverage()</code> the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a paired end bam file. For <code>bamCount()</code> and <code>bamProfile()</code> exclusively, there exists another flag called <code>paired.end.midpoint</code>. Setting <code>paired.end.midpoint=TRUE</code> shifts the counting position from the 5’end to the midpoint of the fragment.</p>
+<p>All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With <code>paired.end!=&quot;ignore&quot;</code>, only the first read in a properly aligned pair is considered (this constraint translates into the bitmask 66 for the flag of a read). The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For <code>bamCoverage()</code> and <code>paired.end==&quot;extend&quot;</code> the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a bam file. For <code>bamCount()</code> and <code>bamProfile()</code> the option <code>paired.end=&quot;midpoint&quot;</code> shifts the counting position from the 5’end to the midpoint of the fragment. For <code>bamCoverage()</code> the option <code>paired.end=&quot;extend&quot;</code> considers only the first read in a properly aligned pair and comput</p>
 </div>
 <div id="exclude-ambiguous-reads-with-the-mapq-argument" class="section level2">
 <h2>Exclude ambiguous reads with the <code>mapq</code> argument</h2>
-<p>Most mapping software (<em>e.g.</em> bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the <code>mapq</code> argument is helpful.</p>
+<p>Most mapping software (<em>e.g.</em> bwa, bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the <code>mapq</code> argument is helpful.</p>
 <pre class="r"><code>counts &lt;- bamCount(bampath, proms, mapq=20, verbose=FALSE)</code></pre>
 </div>
 </div>

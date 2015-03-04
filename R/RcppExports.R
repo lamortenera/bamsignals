@@ -9,12 +9,12 @@ fastWidth <- function(l, ss) {
     .Call('bamsignals_fastWidth', PACKAGE = 'bamsignals', l, ss)
 }
 
-pileup_core <- function(bampath, gr, mapqual = 0L, binsize = 1L, shift = 0L, ss = FALSE, pe = FALSE, pe_mid = FALSE, maxfraglength = 1000L, maxgap = 16385L) {
-    .Call('bamsignals_pileup_core', PACKAGE = 'bamsignals', bampath, gr, mapqual, binsize, shift, ss, pe, pe_mid, maxfraglength, maxgap)
+pileup_core <- function(bampath, gr, mapqual = 0L, binsize = 1L, shift = 0L, ss = FALSE, mask = 0L, pe_mid = FALSE, maxfraglength = 1000L, maxgap = 16385L) {
+    .Call('bamsignals_pileup_core', PACKAGE = 'bamsignals', bampath, gr, mapqual, binsize, shift, ss, mask, pe_mid, maxfraglength, maxgap)
 }
 
-coverage_core <- function(bampath, gr, mapqual = 0L, pe = FALSE, maxfraglength = 1000L, maxgap = 16385L) {
-    .Call('bamsignals_coverage_core', PACKAGE = 'bamsignals', bampath, gr, mapqual, pe, maxfraglength, maxgap)
+coverage_core <- function(bampath, gr, mapqual = 0L, mask = 0L, tspan = FALSE, maxfraglength = 1000L, maxgap = 16385L) {
+    .Call('bamsignals_coverage_core', PACKAGE = 'bamsignals', bampath, gr, mapqual, mask, tspan, maxfraglength, maxgap)
 }
 
 writeSamAsBamAndIndex <- function(sampath, bampath) {

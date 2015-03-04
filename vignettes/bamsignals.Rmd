@@ -218,11 +218,11 @@ legend("topright", c("covering the base pair", "5' end maps to the base pair"),
 
 ## Paired end data handling
 
-All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end=TRUE`, only the first read in a properly aligned pair is considered. The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For `bamCoverage()` the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a paired end bam file. For `bamCount()` and `bamProfile()` exclusively, there exists another flag called `paired.end.midpoint`.  Setting `paired.end.midpoint=TRUE` shifts the counting position from the 5'end to the midpoint of the fragment.
+All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end!="ignore"`, only the first read in a properly aligned pair is considered (this constraint translates into the bitmask 66 for the flag of a read). The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For `bamCoverage()` and `paired.end=="extend"` the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a bam file. For `bamCount()` and `bamProfile()` the option `paired.end="midpoint"`  shifts the counting position from the 5'end to the midpoint of the fragment. For `bamCoverage()` the option `paired.end="extend"` considers only the first read in a properly aligned pair and comput
 
 ## Exclude ambiguous reads with the `mapq` argument
 
-Most mapping software (_e.g._ bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the `mapq` argument is helpful.
+Most mapping software (_e.g._ bwa, bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the `mapq` argument is helpful.
 
 ```{r}
 counts <- bamCount(bampath, proms, mapq=20, verbose=FALSE)
