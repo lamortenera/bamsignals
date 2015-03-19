@@ -103,7 +103,7 @@ stopifnot(all(width(sigs)==width(genes)))
 ```
 
 ### Counting on each strand separately
-As for the `bamCount()` function, the reads can be counted for each strand separately
+As for the `bamCount()` function, also with `bamProfile()` the reads can be counted for each strand separately
 ```{r}
 sssigs <- bamProfile(bampath, genes, verbose=FALSE, ss=TRUE)
 sssigs

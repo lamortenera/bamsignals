@@ -10,7 +10,7 @@
 
 <meta name="author" content="Alessandro Mammana and Johannes Helmuth" />
 
-<meta name="date" content="2015-03-04" />
+<meta name="date" content="2015-03-19" />
 
 <title>Introduction to the bamsignals package</title>
 
@@ -43,7 +43,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="header">
 <h1 class="title">Introduction to the bamsignals package</h1>
 <h4 class="author"><em>Alessandro Mammana and Johannes Helmuth</em></h4>
-<h4 class="date"><em>2015-03-04</em></h4>
+<h4 class="date"><em>2015-03-19</em></h4>
 </div>
 
 <div id="TOC">
@@ -194,7 +194,7 @@ stopifnot(all(sapply(sigs, sum) == sapply(lsigs, sum)))</code></pre>
 <pre class="r"><code>stopifnot(all(width(sigs)==width(genes)))</code></pre>
 <div id="counting-on-each-strand-separately-1" class="section level3">
 <h3>Counting on each strand separately</h3>
-<p>As for the <code>bamCount()</code> function, the reads can be counted for each strand separately</p>
+<p>As for the <code>bamCount()</code> function, also with <code>bamProfile()</code> the reads can be counted for each strand separately</p>
 <pre class="r"><code>sssigs &lt;- bamProfile(bampath, genes, verbose=FALSE, ss=TRUE)
 sssigs</code></pre>
 <pre><code>## CountSignals object with 49 strand-specific signals
