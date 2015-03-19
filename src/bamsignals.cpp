@@ -42,12 +42,12 @@ class GArray {
     
     int rid;//reference id as in the bamfile
     int loc;//0-indexed
-    int len;
+    int len;//num of bases in the genomic range
     int strand;//-1,0,1 represent alternative, unspecified, reference strand respectively
     inline int end(){ return loc + len; }
     //initialized when allocating memory
-    int* array;
-    int alen;
+    int* array;//array where counts are stored
+    int alen;//num of elements of the array
     GArray(int _rid, int _loc, int _len, int _strand){
         rid = _rid;
         loc = _loc;
@@ -139,31 +139,55 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samfile_t* in){
 }
 
 //allocates the memory and sets the pointer for each GArray object
-static List allocateList(std::vector<GArray>& ranges, int binsize, bool ss){
+//it also sets the binsize if binsize <= 0
+static List allocateList(std::vector<GArray>& ranges, int* binsize, bool ss){
     int rnum = ranges.size();//number of ranges
     int mult = ss?2:1;
-    double dbinsize = binsize;
-    //range i will be stored as the i-th element of sigs
-    List sigs(rnum);
+    double dbinsize = *binsize;
     //set the dimnames (this is needed only if ss==TRUE)
     List dnames(2);
     if (ss) dnames[0] = CharacterVector::create("sense", "antisense");
     
-    //compute breaks and total length
+    //allocate a list with one vector (or matrix) containing all counts
+    if (dbinsize <= 0){
+        List sigs(1);
+        int* C;
+        if (ss){
+          IntegerMatrix sig(2, rnum);
+          sig.attr("dimnames") = dnames;
+          sigs[0] = sig;
+          C = sig.begin();
+        } else {
+          IntegerVector sig(rnum);
+          sigs[0] = sig;
+          C = sig.begin();
+        }
+        //assign pointers and compute binsize for the pileupper
+        int maxw = -1;
+        for (int i = 0; i < rnum; ++i){
+            ranges[i].array = C + mult*i;
+            maxw = std::max(maxw, ranges[i].len);
+        }
+        *binsize = maxw;
+        return sigs;
+    }
+    
+    //allocate a list where range i will be stored as the i-th element of sigs
+    List sigs(rnum);
     for (int i = 0; i < rnum; ++i){
         //the width does not depend on the 'ss' parameter
         int width = ceil(ranges[i].len/dbinsize);
         if (ss){
-          //if strand specific, allocate matrix
-          IntegerMatrix sig(2, width);
-          sig.attr("dimnames") = dnames;
-          sigs[i] = sig;
-          ranges[i].array = sig.begin(); 
+            //if strand specific, allocate matrix
+            IntegerMatrix sig(2, width);
+            sig.attr("dimnames") = dnames;
+            sigs[i] = sig;
+            ranges[i].array = sig.begin(); 
         } else {
-          //otherwise, allocate vector
-          IntegerVector sig(width);
-          sigs[i] = sig;
-          ranges[i].array = sig.begin(); 
+            //otherwise, allocate vector
+            IntegerVector sig(width);
+            sigs[i] = sig;
+            ranges[i].array = sig.begin(); 
         }
         //set the pointer of the range
         ranges[i].alen = mult*width;
@@ -211,8 +235,10 @@ static inline bool sortByStart(const GArray& a, const GArray& b){
 //the function TPileup.pileup is called
 
 //interface for TPileup:
-//bool setRead(const bam1_t*) (set the read and check compatibility)
-//void pileup(GArray&) (pileup the last set read with the given interval)
+//1. int setRead(const bam1_t*): check compatibility of the read, if compatible
+//set the internal variables of the pileupper and return the end of the read 
+//(0-based, inclusive, we don't want to compute it twice), otherwise -1
+//2. void pileup(GArray&): pileup the last set read with the given interval
 
 //the parameter 'ext' is an extension added to beginning and end of a read
 //when computing the ranges that it overlaps
@@ -248,10 +274,11 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<GArray>& ranges,
         unsigned int curr_range = chunk_start;
         //loop through the reads
         while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
-            if (!pileupper.setRead(read)) continue;
+            int read_end = pileupper.setRead(read);
+            if (read_end < 0) continue;
             //overlap start end end (extremes included)
             int ov_start = (read->core).pos - ext;
-            int ov_end = readEnd(read) + ext;
+            int ov_end = read_end + ext;
             //skip non-overlapping regions at the beginning
             while (curr_range < chunk_end && ov_start >= ranges[curr_range].end()) ++curr_range;
             //should never happen
@@ -281,28 +308,35 @@ class Pileupper{
     //these values refer to the last read and are set using "setRead"
     
     //0-based position of the 5' end base pair from the start of the chromosome
-    int pos = -1;
+    int pos;
     //true if is on the reference strand, false otherwise
-    bool negstrand = false;
+    bool negstrand;
     
     Pileupper(int abinsize, int ashift, bool ass, int amapqual, unsigned amask, bool amidpoint) : 
-        binsize(abinsize), shift(ashift), ss(ass), mapqual(amapqual), mask(amask), midpoint(amidpoint) {}
+        binsize(abinsize), shift(ashift), ss(ass), mapqual(amapqual), mask(amask), midpoint(amidpoint) 
+    {
+        pos = -1;
+        negstrand = false;
+    }
     
     //it filter the reads if they are not ok
     //and sets the relevant variables if they are ok
-    inline bool setRead(const bam1_t* read){
+    //it returns the end of the read if everything is ok, -1 otherwise
+    inline int setRead(const bam1_t* read){
         //filter the read
-        if ((read->core).qual < mapqual || invalidFlag(read, mask)) return false;
+        if ((read->core).qual < mapqual || invalidFlag(read, mask)) return -1;
+        //compute read end
+        int read_end = readEnd(read);
         //set 'negstrand' and 'pos'
         negstrand = isNegStrand(read);
         //shift in the 5' direction
         int offset = midpoint?(abs((read->core).isize)/2 + shift):shift; 
         if (negstrand) {
-            pos = readEnd(read) - offset;
+            pos = read_end - offset;
         } else {
             pos = (read->core).pos + offset;
         }
-        return true;
+        return read_end;
     }
     
     //it accumulates the last set read with a given range
@@ -330,22 +364,28 @@ class Coverager{
     const unsigned mask;
     const bool tspan;//consider the span of the whole read pair or not
     
-    Coverager(int amapqual, unsigned amask, bool atspan) :
-    mapqual(amapqual), mask(amask), tspan(atspan) {}
-    
     //these values refer to the last read and are set using "setRead"
     //'start' and 'end' (0-based, inclusive) 
-    int start = -1;
-    int end = -1;
+    int start;
+    int end;
+    
+    Coverager(int amapqual, unsigned amask, bool atspan) :
+    mapqual(amapqual), mask(amask), tspan(atspan) 
+    {
+        start = end = -1;
+    }
+    
     
     //it filter the reads if they are not ok
     //and sets the relevant variables if they are ok
-    inline bool setRead(const bam1_t* read){
+    //it returns the end of the read if everything is ok, -1 otherwise
+    inline int setRead(const bam1_t* read){
         //filter the read
-        if ((read->core).qual < mapqual || invalidFlag(read, mask)) return false;
+        if ((read->core).qual < mapqual || invalidFlag(read, mask)) return -1;
         //set 'start' and 'end' (0-based, inclusive)
+        int read_end = readEnd(read);
         start = (read->core).pos;
-        end = readEnd(read);
+        end = read_end;
         if (tspan){
             bool negstrand = isNegStrand(read);
             int isize = (read->core).isize;
@@ -356,7 +396,7 @@ class Coverager{
                 end   = start + isize - 1;
             }
         }
-        return true;
+        return read_end;
     }
     
     //it accumulates the last set read with a given range
@@ -384,7 +424,7 @@ class Coverager{
 };
 
 //this function is called by bamProfile and bamCount.
-//when it is bamCount, then binsize==max(width(gr))
+//when it is bamCount, then binsize <= 0
 // [[Rcpp::export]]
 List pileup_core(std::string bampath, RObject gr, int mapqual=0, int binsize=1, int shift=0, bool ss=false, 
     int mask=0, bool pe_mid=false, int maxfraglength=1000, int maxgap=16385){
@@ -393,11 +433,11 @@ List pileup_core(std::string bampath, RObject gr, int mapqual=0, int binsize=1, 
     Bamfile bfile(bampath);
     //adding regions to the vector
     parseRegions(ranges, gr, bfile.in);
-    //allocate memory
-    List ret = allocateList(ranges, binsize, ss);
+    //allocate memory (if binsize <= 0, binsize is set to max(width(gr)))
+    List ret = allocateList(ranges, &binsize, ss);
     //pileup
     Pileupper p(binsize, shift, ss, mapqual, mask, pe_mid);
-    int ext = abs(shift) + pe_mid?maxfraglength:0;
+    int ext = abs(shift) + (pe_mid?maxfraglength:0);
     overlapAndPileup(bfile, ranges, ext, p, maxgap);
      
     //close bamfile and index
@@ -425,7 +465,8 @@ List coverage_core(std::string bampath, RObject gr, int mapqual=0,
     //adding regions to the vector
     parseRegions(ranges, gr, bfile.in);
     //allocate memory
-    List ret = allocateList(ranges, 1, false);
+    int binsize = 1;
+    List ret = allocateList(ranges, &binsize, false);
     //pileup int amapqual, unsigned amask, bool atspan
     Coverager c(mapqual, mask, tspan);
     int ext = tspan?maxfraglength:0;

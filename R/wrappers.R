@@ -90,15 +90,10 @@ setMethod("bamCount", c("character", "GenomicRanges"),
         
         pe <- match.arg(paired.end)
         
-        pu <- pileup_core(bampath, gr, mapqual, max(width(gr)), shift, ss, 
+        pu <- pileup_core(bampath, gr, mapqual, -1, shift, ss, 
         flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
         
-        counts <- unlist(pu)
-        if (ss) {
-            dim(counts) <- c(2, length(gr))
-            rownames(counts) <- c("sense", "antisense")
-        }
-        counts
+        pu[[1]]
     }
 )
 
