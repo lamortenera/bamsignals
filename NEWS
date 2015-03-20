@@ -1,0 +1,7 @@
+CHANGES IN VERSION 0.99.0
+-----------------------
+
+NEW FEATURES
+
+    o Creation of the bamsignals package, a package to
+      load count data from indexed bam files efficiently.
