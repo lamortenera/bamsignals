@@ -1,7 +1,8 @@
 #include <Rcpp.h>
 #include <stdio.h>  
 #include <algorithm>
-#include "samtools/sam.h"  
+#include "sam.h"
+#include "bgzf.h"
 
 //in C: true==1(or something different than 0), false==0
 using namespace Rcpp;
@@ -13,7 +14,7 @@ inline bool isNegStrand(const bam1_t *b){
 
 //leftmost position of a read (0-based, inclusive)
 inline int readEnd(const bam1_t *b){
-    return bam_calend(&(b->core), bam1_cigar(b)) - 1;
+    return bam_endpos(b) - 1;
 }
 
 //it returns true if any of the bits in the mask is not set
@@ -21,17 +22,9 @@ inline bool invalidFlag(const bam1_t *b, uint32_t mask){
     return (mask & ~(b->core).flag);
 }
 
-//workaround, because the function 
-//"bam_init_header_hash" in samtools/bam_aux.c
-//is not in any header... this should be equivalent
-void bam_init_header_hash(bam_header_t *header){
-    int foo = 0;
-    bam_parse_region(header, "", &foo, &foo, &foo);
-}
-
 //gets the reference id of a chromosome as stored in the bam file
-inline int getRefId(samfile_t* in, const std::string& refname){
-    return bam_get_tid(in->header, refname.c_str());
+inline int getRefId(bam_hdr_t* header, const std::string& refname){
+    return bam_name2id(header, refname.c_str());
 }
 
 //genomic array: represents a correspondence between a genomic range and
@@ -96,9 +89,10 @@ class RleIter {
 };
 
 //parses the GR object.
-void parseRegions(std::vector<GArray>& container, RObject& gr, samfile_t* in){
+void parseRegions(std::vector<GArray>& container, RObject& gr, samFile* in){
     if (not gr.inherits("GRanges"))
         stop("must provide a GRanges object");
+    bam_hdr_t *header = sam_hdr_read(in);
     
     IntegerVector starts = as<IntegerVector>(as<RObject>(gr.slot("ranges")).slot("start"));
     IntegerVector lens =   as<IntegerVector>(as<RObject>(gr.slot("ranges")).slot("width"));
@@ -120,7 +114,8 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samfile_t* in){
         //if new run, update chromosome
         if (lastChrsRun != chrs.run){
             lastChrsRun = chrs.run;
-            rid = getRefId(in, chrs.getValue());
+            //rid = getRefId(in, chrs.getValue());
+            rid = getRefId(header, chrs.getValue());
             if (rid == -1)
                 stop("chromosome " + (std::string)chrs.getValue() + " not present in the bam file");
         }
@@ -198,13 +193,13 @@ static List allocateList(std::vector<GArray>& ranges, int* binsize, bool ss){
 //if you forget to close the Bamfile you get a memory leak
 class Bamfile {
     public:
-        samfile_t* in;
-        bam_index_t* idx;
+        samFile* in;
+        hts_idx_t* idx;
         //allocate memory
         Bamfile(const std::string& bampath, int cache_size=10*BGZF_MAX_BLOCK_SIZE){
             const char* cbampath = bampath.c_str();
-            in = samopen(cbampath, "rb", 0);  
-            if (in == 0) {  
+            in = sam_open(cbampath, "rb");
+            if (in == NULL) {  
                 stop("Fail to open BAM file " + bampath);  
             }
             
@@ -212,15 +207,14 @@ class Bamfile {
             if (idx == 0) {  
                 stop("BAM indexing file is not available for file " + bampath);
             }  
-            bam_init_header_hash(in->header);
             if (cache_size > 0){
-                bgzf_set_cache_size(in->x.bam, cache_size);
+                bgzf_set_cache_size(in->fp.bgzf, cache_size);
             }
         }
         //deallocate
         void close(){
-            bam_index_destroy(idx);  
-            samclose(in);
+            hts_idx_destroy(idx);  
+            sam_close(in);
         }
 };
 
@@ -269,11 +263,11 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<GArray>& ranges,
             end = std::max(end, ranges[chunk_end].end() + ext);
         }
         //perform query
-        bam_iter_t iter = bam_iter_query(bfile.idx, rid, start, end);
+        hts_itr_t* iter = bam_itr_queryi(bfile.idx, rid, start, end);
         //all ranges behind curr_range should not overlap with the next reads anymore
         unsigned int curr_range = chunk_start;
         //loop through the reads
-        while (bam_iter_read((bfile.in)->x.bam, iter, read) >= 0){
+        while (bam_itr_next(bfile.in, iter, read) >= 0){
             int read_end = pileupper.setRead(read);
             if (read_end < 0) continue;
             //overlap start end end (extremes included)
@@ -289,7 +283,7 @@ static void overlapAndPileup(Bamfile& bfile, std::vector<GArray>& ranges,
                 pileupper.pileup(ranges[range]);
             }
         }
-        bam_iter_destroy(iter);
+        bam_itr_destroy(iter);
         processed = chunk_end;
     }
     bam_destroy1(read);
@@ -484,35 +478,37 @@ List coverage_core(std::string bampath, RObject gr, int mapqual=0,
 // [[Rcpp::export]]
 bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath) {
     //streams
-    samfile_t *in = 0, *out = 0;
+    samFile *in = 0, *out = 0;
 
     //open samfile for reading
     const char* csampath = sampath.c_str();
-    in = samopen(csampath, "r", 0);
+    in = sam_open(csampath, "r");
     if (in == 0) {  
         stop("Fail to open SAM file " + sampath);  
     }
+    bam_hdr_t *header = sam_hdr_read(in);
 
     //open bamfile for writing
     const char* cbampath = bampath.c_str();
-    out = samopen(cbampath, "wb", in->header);
+    out = sam_open(cbampath, "wb");
     if (out == 0) {  
         stop("Fail to open BAM file ." + bampath);  
     }
+    sam_hdr_write(out, header);
 
     //read sam and write to bam: adapted from sam_view.c:232-244
     bam1_t *b = bam_init1();
-    while (samread(in, b) >= 0) { // read one alignment from `in'
-        samwrite(out, b); // write the alignment to `out'
+    while (sam_read1(in, header, b) >= 0) { // read one alignment from `in'
+        bam_write1(out->fp.bgzf, b); // write the alignment to `out'
     }
     bam_destroy1(b);
 
     //close streams
-    samclose(in);
-    samclose(out);
+    sam_close(in);
+    sam_close(out);
 
     //build the index
-    bam_index_build(bampath.c_str());
+    bam_index_build(bampath.c_str(), 0);
 
     return true;
 }
