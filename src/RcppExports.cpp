@@ -9,92 +9,72 @@ using namespace Rcpp;
 bool checkList(Rcpp::List l, bool ss);
 RcppExport SEXP bamsignals_checkList(SEXP lSEXP, SEXP ssSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< Rcpp::List >::type l(lSEXP );
-        Rcpp::traits::input_parameter< bool >::type ss(ssSEXP );
-        bool __result = checkList(l, ss);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::List >::type l(lSEXP);
+    Rcpp::traits::input_parameter< bool >::type ss(ssSEXP);
+    __result = Rcpp::wrap(checkList(l, ss));
+    return __result;
 END_RCPP
 }
 // fastWidth
 Rcpp::IntegerVector fastWidth(Rcpp::List l, bool ss);
 RcppExport SEXP bamsignals_fastWidth(SEXP lSEXP, SEXP ssSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< Rcpp::List >::type l(lSEXP );
-        Rcpp::traits::input_parameter< bool >::type ss(ssSEXP );
-        Rcpp::IntegerVector __result = fastWidth(l, ss);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::List >::type l(lSEXP);
+    Rcpp::traits::input_parameter< bool >::type ss(ssSEXP);
+    __result = Rcpp::wrap(fastWidth(l, ss));
+    return __result;
 END_RCPP
 }
 // pileup_core
-List pileup_core(std::string bampath, RObject gr, int mapqual = 0, int binsize = 1, int shift = 0, bool ss = false, int mask = 0, bool pe_mid = false, int maxfraglength = 1000, int maxgap = 16385);
+List pileup_core(std::string bampath, RObject gr, int mapqual, int binsize, int shift, bool ss, int mask, bool pe_mid, int maxfraglength, int maxgap);
 RcppExport SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP maskSEXP, SEXP pe_midSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP );
-        Rcpp::traits::input_parameter< RObject >::type gr(grSEXP );
-        Rcpp::traits::input_parameter< int >::type mapqual(mapqualSEXP );
-        Rcpp::traits::input_parameter< int >::type binsize(binsizeSEXP );
-        Rcpp::traits::input_parameter< int >::type shift(shiftSEXP );
-        Rcpp::traits::input_parameter< bool >::type ss(ssSEXP );
-        Rcpp::traits::input_parameter< int >::type mask(maskSEXP );
-        Rcpp::traits::input_parameter< bool >::type pe_mid(pe_midSEXP );
-        Rcpp::traits::input_parameter< int >::type maxfraglength(maxfraglengthSEXP );
-        Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP );
-        List __result = pileup_core(bampath, gr, mapqual, binsize, shift, ss, mask, pe_mid, maxfraglength, maxgap);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
+    Rcpp::traits::input_parameter< RObject >::type gr(grSEXP);
+    Rcpp::traits::input_parameter< int >::type mapqual(mapqualSEXP);
+    Rcpp::traits::input_parameter< int >::type binsize(binsizeSEXP);
+    Rcpp::traits::input_parameter< int >::type shift(shiftSEXP);
+    Rcpp::traits::input_parameter< bool >::type ss(ssSEXP);
+    Rcpp::traits::input_parameter< int >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< bool >::type pe_mid(pe_midSEXP);
+    Rcpp::traits::input_parameter< int >::type maxfraglength(maxfraglengthSEXP);
+    Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP);
+    __result = Rcpp::wrap(pileup_core(bampath, gr, mapqual, binsize, shift, ss, mask, pe_mid, maxfraglength, maxgap));
+    return __result;
 END_RCPP
 }
 // coverage_core
-List coverage_core(std::string bampath, RObject gr, int mapqual = 0, int mask = 0, bool tspan = false, int maxfraglength = 1000, int maxgap = 16385);
+List coverage_core(std::string bampath, RObject gr, int mapqual, int mask, bool tspan, int maxfraglength, int maxgap);
 RcppExport SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP maskSEXP, SEXP tspanSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP );
-        Rcpp::traits::input_parameter< RObject >::type gr(grSEXP );
-        Rcpp::traits::input_parameter< int >::type mapqual(mapqualSEXP );
-        Rcpp::traits::input_parameter< int >::type mask(maskSEXP );
-        Rcpp::traits::input_parameter< bool >::type tspan(tspanSEXP );
-        Rcpp::traits::input_parameter< int >::type maxfraglength(maxfraglengthSEXP );
-        Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP );
-        List __result = coverage_core(bampath, gr, mapqual, mask, tspan, maxfraglength, maxgap);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
+    Rcpp::traits::input_parameter< RObject >::type gr(grSEXP);
+    Rcpp::traits::input_parameter< int >::type mapqual(mapqualSEXP);
+    Rcpp::traits::input_parameter< int >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< bool >::type tspan(tspanSEXP);
+    Rcpp::traits::input_parameter< int >::type maxfraglength(maxfraglengthSEXP);
+    Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP);
+    __result = Rcpp::wrap(coverage_core(bampath, gr, mapqual, mask, tspan, maxfraglength, maxgap));
+    return __result;
 END_RCPP
 }
 // writeSamAsBamAndIndex
 bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath);
 RcppExport SEXP bamsignals_writeSamAsBamAndIndex(SEXP sampathSEXP, SEXP bampathSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< const std::string& >::type sampath(sampathSEXP );
-        Rcpp::traits::input_parameter< const std::string& >::type bampath(bampathSEXP );
-        bool __result = writeSamAsBamAndIndex(sampath, bampath);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const std::string& >::type sampath(sampathSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type bampath(bampathSEXP);
+    __result = Rcpp::wrap(writeSamAsBamAndIndex(sampath, bampath));
+    return __result;
 END_RCPP
 }
