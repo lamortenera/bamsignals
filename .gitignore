@@ -1,0 +1,6 @@
+#compiled files
+*.o
+*.so
+*.rds
+#R history
+.Rhistory
