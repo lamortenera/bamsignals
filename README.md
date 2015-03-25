@@ -1,8 +1,7 @@
 bamsignals
 ==========
-[![Build Status](https://travis-ci.org/lamortenera/bamsignals.svg?branch=s4)](https://travis-ci.org/lamortenera/bamsignals)
-
-R package to quickly obtain count vectors from indexed bam files
+R package to quickly obtain count vectors from indexed bam files.
+This branch requires R 3.2 (currently under development)
 
 ## Installation
 
@@ -17,3 +16,11 @@ To install `bamsignals` type:
 ```R
 devtools::install_github("lamortenera/bamsignals")
 ```
+
+Alternatively, you can install it from Bioconductor (the two repos are synchronized):
+
+```R
+source("http://bioconductor.org/biocLite.R")
+biocLite("bamsignals")
+```
+
