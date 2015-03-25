@@ -131,6 +131,8 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samFile* in){
         
         container.push_back(GArray(rid, starts[i] - 1, lens[i], strand));
     }
+    
+    bam_hdr_destroy(header);
 }
 
 //allocates the memory and sets the pointer for each GArray object
@@ -212,7 +214,7 @@ class Bamfile {
             }
         }
         //deallocate
-        void close(){
+        ~Bamfile(){
             hts_idx_destroy(idx);  
             sam_close(in);
         }
@@ -433,9 +435,6 @@ List pileup_core(std::string bampath, RObject gr, int mapqual=0, int binsize=1, 
     Pileupper p(binsize, shift, ss, mapqual, mask, pe_mid);
     int ext = abs(shift) + (pe_mid?maxfraglength:0);
     overlapAndPileup(bfile, ranges, ext, p, maxgap);
-     
-    //close bamfile and index
-    bfile.close();
     
     return ret;
 }
@@ -465,8 +464,6 @@ List coverage_core(std::string bampath, RObject gr, int mapqual=0,
     Coverager c(mapqual, mask, tspan);
     int ext = tspan?maxfraglength:0;
     overlapAndPileup(bfile, ranges, ext, c, maxgap);
-    //close bamfile and index
-    bfile.close();
     //do cumsum on all the ranges
     for (int i = 0, e = ranges.size(); i < e; ++i){
         cumsum(ranges[i].array, ranges[i].len);
