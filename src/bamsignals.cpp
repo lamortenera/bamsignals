@@ -131,6 +131,8 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samFile* in){
         
         container.push_back(GArray(rid, starts[i] - 1, lens[i], strand));
     }
+    
+    bam_hdr_destroy(header);
 }
 
 //allocates the memory and sets the pointer for each GArray object
