@@ -37,6 +37,8 @@ negReads <- data.frame(
   read1=!posReads$read1,
   mapq=sample(254, nPairs, replace=TRUE))
 negReads$pos <- posReads$pos + posReads$isize - negReads$qwidth
+posReads$pnext <- negReads$pos
+negReads$pnext <- posReads$pos
 
 reads <- rbind(posReads, negReads)
 #remove some of them
