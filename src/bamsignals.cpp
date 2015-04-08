@@ -114,7 +114,6 @@ void parseRegions(std::vector<GArray>& container, RObject& gr, samFile* in){
         //if new run, update chromosome
         if (lastChrsRun != chrs.run){
             lastChrsRun = chrs.run;
-            //rid = getRefId(in, chrs.getValue());
             rid = getRefId(header, chrs.getValue());
             if (rid == -1)
                 stop("chromosome " + (std::string)chrs.getValue() + " not present in the bam file");
