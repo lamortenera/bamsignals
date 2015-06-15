@@ -1,7 +1,6 @@
 bamsignals
 ==========
 R package to quickly obtain count vectors from indexed bam files.
-This branch requires R >= 3.2
 
 ## Installation
 
