@@ -90,6 +90,7 @@ setMethod("bamCount", c("character", "GenomicRanges"),
         
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, mapqual, -1, shift, ss, 
         flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
         
@@ -120,6 +121,7 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
 
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, mapqual, binsize, shift, ss, 
         flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
         
@@ -141,6 +143,7 @@ setMethod("bamCoverage", c("character", "GenomicRanges"),
         
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- coverage_core(bampath, gr, mapqual, flagMask(pe), (pe=="extend"),
         paired.end.max.frag.length)
         
