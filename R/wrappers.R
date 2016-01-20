@@ -38,17 +38,25 @@ NULL
 #' Strand-specific profiles are twice as long then strand-independent profiles.
 #' @param paired.end a character string indicating how to handle paired-end 
 #' reads. If \code{paired.end!="ignore"} then only first reads in proper mapped
-#' pairs will be consider (i.e. in the flag of the read, the bits in the mask 
-#' 66 must be all ones). If \code{paired.end=="midpoint"} then the midpoint of a
-#' fragment is considered, where \code{mid = fragment_start + int(abs(tlen)/2)},
-#' and where tlen is the template length stored in the bam file. For even tlen,
-#' the given midpoint will be moved of 0.5 basepairs in the 3' direction. 
+#' pairs will be considered (SAMFLAG 66, i.e. in the flag of the read, the bits 
+#' in the mask 66 must be all ones). 
+#' If \code{paired.end=="midpoint"} then the midpoint of a filtered fragment is 
+#' considered, where \code{mid = fragment_start + int(abs(tlen)/2)}, and where 
+#' tlen is the template length stored in the bam file. For even tlen, the given 
+#' midpoint will be moved of 0.5 basepairs in the 3' direction (bamCount, 
+#' bamProfile)
 #' If \code{paired.end=="extend"} then the whole fragment is treated 
-#' as a single read.
+#' as a single read (bamCoverage).
 #' @param paired.end.max.frag.length the maximum length between left-, and 
 #' right-most mapping position of a paired read. This is considered only when 
-#' \code{paired.end} is either \code{"extend"} or \code{"midpoint"}. The default value is 
-#' generally a good pick.
+#' \code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
+#' \code{"extend"}. The default value (1,000) is generally a good pick. For 
+#' mono-nucleosomal fragments only set this value to 200.
+#' @param paired.end.min.frag.length the minimum length between left-, and 
+#' right-most mapping position of a paired read. This is considered only when 
+#' \code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
+#' \code{"extend"}. The default value (0) is generally a good pick. For 
+#' mono-nucleosomal fragments only set this value to 100.
 #' @param verbose a logical value indicating whether verbose output is desired
 #' @return \itemize{
 #'   \item \code{bamProfile} and \code{bamCoverage}: a CountSignals object with a signal 
@@ -85,13 +93,17 @@ setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 setMethod("bamCount", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"), 
-    paired.end.max.frag.length=1000, verbose=TRUE){
+    paired.end.max.frag.length=1000, 
+    paired.end.min.frag.length=0,
+    verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, mapqual, -1, shift, ss, 
-        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
+        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length,
+        paired.end.min.frag.length)
         
         pu[[1]]
     }
@@ -108,7 +120,9 @@ setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"
 setMethod("bamProfile", c("character", "GenomicRanges"), 
     function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"),
-    paired.end.max.frag.length=1000, verbose=TRUE){
+    paired.end.max.frag.length=1000, 
+    paired.end.min.frag.length=0,
+    verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         if (binsize < 1){
@@ -120,8 +134,10 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
 
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, mapqual, binsize, shift, ss, 
-        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length)
+        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length,
+        paired.end.min.frag.length)
         
         new("CountSignals", signals=pu, ss=ss)
     }
@@ -136,13 +152,16 @@ setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverag
 #' @export
 setMethod("bamCoverage", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, paired.end=c("ignore", "extend"),
-    paired.end.max.frag.length=1000, verbose=TRUE){
+    paired.end.max.frag.length=1000, 
+    paired.end.min.frag.length=0,
+    verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
+        bampath <- path.expand(bampath)
         pu <- coverage_core(bampath, gr, mapqual, flagMask(pe), (pe=="extend"),
-        paired.end.max.frag.length)
+        paired.end.max.frag.length, paired.end.min.frag.length)
         
         new("CountSignals", signals=pu, ss=FALSE)
     }
