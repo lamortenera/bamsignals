@@ -1,7 +1,7 @@
-#' Efficient counting of reads in a bam files
+#' Efficient counting of reads in a bam file
 #'
 #' Functions and classes for extracting signals from a bam file. Differently 
-#' than the other packages, this package cannot be used to import reads in R.
+#' than the other packages, this package is not supposed to import reads in R.
 #' All the read-processing is done in C/C++ and the only output are read counts. 
 #'
 #' @name bamsignals
@@ -39,24 +39,19 @@ NULL
 #' @param paired.end a character string indicating how to handle paired-end 
 #' reads. If \code{paired.end!="ignore"} then only first reads in proper mapped
 #' pairs will be considered (SAMFLAG 66, i.e. in the flag of the read, the bits 
-#' in the mask 66 must be all ones). 
+#' in the mask 66 must be all ones). \cr
 #' If \code{paired.end=="midpoint"} then the midpoint of a filtered fragment is 
 #' considered, where \code{mid = fragment_start + int(abs(tlen)/2)}, and where 
 #' tlen is the template length stored in the bam file. For even tlen, the given 
 #' midpoint will be moved of 0.5 basepairs in the 3' direction (bamCount, 
-#' bamProfile)
+#' bamProfile). \cr
 #' If \code{paired.end=="extend"} then the whole fragment is treated 
 #' as a single read (bamCoverage).
-#' @param paired.end.max.frag.length the maximum length between left-, and 
-#' right-most mapping position of a paired read. This is considered only when 
-#' \code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
-#' \code{"extend"}. The default value (1,000) is generally a good pick. For 
-#' mono-nucleosomal fragments only set this value to 200.
-#' @param paired.end.min.frag.length the minimum length between left-, and 
-#' right-most mapping position of a paired read. This is considered only when 
-#' \code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
-#' \code{"extend"}. The default value (0) is generally a good pick. For 
-#' mono-nucleosomal fragments only set this value to 100.
+#' @param tlen.filter A filter on fragment length as estimated from alignment 
+#' in paired end experiments (TLEN). If set to \code{c(min,max)} only reads are 
+#' considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
+#' this argument is set to \code{NULL} and no filtering is done. If 
+#' \code{paired.end!="ignore"}, this argument defaults to \code{c(0,1000)}.
 #' @param verbose a logical value indicating whether verbose output is desired
 #' @return \itemize{
 #'   \item \code{bamProfile} and \code{bamCoverage}: a CountSignals object with a signal 
@@ -68,7 +63,8 @@ NULL
 #' @details A read position is always specified by its 5' end, so a read mapping
 #' to the reference strand is positioned at its leftmost coordinate, a 
 #' read mapping to the alternative strand is positioned at its rightmost 
-#' coordinate. This can be changed using the \code{shift} parameter.
+#' coordinate. This can be changed using the \code{shift} parameter. \cr
+#'  
 #' @seealso \code{\link{CountSignals}} for handling the return value of 
 #' \code{bamProfile} and \code{bamCoverage}
 #' @name bamsignals-methods
@@ -83,6 +79,22 @@ flagMask <- function(paired.end){
   0L
 }
 
+#helper functions to set the right flag
+tlenFilter <- function(tlen.filter, paired.end){
+  #No filtering if paired end is ignored
+  if (paired.end == "ignore") return(integer())
+  #Default filter if tlen.filter is unset
+  if (is.null(tlen.filter)) return(c(0,1000))
+  #Check supplied tlen.filter
+  if (length(tlen.filter) != 2 || tlen.filter[1] < 0 ||
+      tlen.filter[2] < 0) {
+    stop("tlen.filter must be NULL or vector of 2 positive integers")
+  } 
+  if (tlen.filter[1] > tlen.filter[2]) {
+    stop("tlen.filter[1] must be smaller or equal to tlen.filter[2]")
+  }
+  tlen.filter
+}
 
 #' @export
 setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
@@ -93,17 +105,14 @@ setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 setMethod("bamCount", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"), 
-    paired.end.max.frag.length=1000, 
-    paired.end.min.frag.length=0,
-    verbose=TRUE){
+    tlen.filter=NULL, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- pileup_core(bampath, gr, mapqual, -1, shift, ss, 
-        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length,
-        paired.end.min.frag.length)
+        pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
+        -1, shift, ss, flagMask(pe), (pe=="midpoint"))
         
         pu[[1]]
     }
@@ -120,9 +129,7 @@ setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"
 setMethod("bamProfile", c("character", "GenomicRanges"), 
     function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"),
-    paired.end.max.frag.length=1000, 
-    paired.end.min.frag.length=0,
-    verbose=TRUE){
+    tlen.filter=NULL, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         if (binsize < 1){
@@ -135,9 +142,8 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- pileup_core(bampath, gr, mapqual, binsize, shift, ss, 
-        flagMask(pe), (pe=="midpoint"), paired.end.max.frag.length,
-        paired.end.min.frag.length)
+        pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, binsize, 
+        shift, ss, flagMask(pe), (pe=="midpoint"))
         
         new("CountSignals", signals=pu, ss=ss)
     }
@@ -152,16 +158,14 @@ setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverag
 #' @export
 setMethod("bamCoverage", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, paired.end=c("ignore", "extend"),
-    paired.end.max.frag.length=1000, 
-    paired.end.min.frag.length=0,
-    verbose=TRUE){
+    tlen.filter=NULL, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- coverage_core(bampath, gr, mapqual, flagMask(pe), (pe=="extend"),
-        paired.end.max.frag.length, paired.end.min.frag.length)
+        pu <- coverage_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
+        flagMask(pe), (pe=="extend"))
         
         new("CountSignals", signals=pu, ss=FALSE)
     }

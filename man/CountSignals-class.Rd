@@ -4,6 +4,7 @@
 \name{CountSignals-class}
 \alias{CountSignals}
 \alias{CountSignals-class}
+\alias{[,CountSignals,ANY,ANY-method}
 \alias{[,CountSignals,ANY-method}
 \alias{alignSignals}
 \alias{alignSignals,CountSignals-method}
@@ -19,7 +20,7 @@
 
 \S4method{width}{CountSignals}(x)
 
-\S4method{[}{CountSignals,ANY}(x, i, drop = TRUE)
+\S4method{[}{CountSignals,ANY,ANY}(x, i, drop = TRUE)
 
 \S4method{as.list}{CountSignals}(x)
 
