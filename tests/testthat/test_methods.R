@@ -25,7 +25,7 @@ posReads <- data.frame(
   pos=sample(lastStart, nPairs, replace=TRUE),  #start of the read
   qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),    #length of the read
   strand=rep("+", nPairs),                       #strand
-  isize=1+rpois(nPairs, lambda=(avgFLen-1)),    #template (or fragment) length
+  isize=1+rnbinom(nPairs, mu=(avgFLen-1), size=10),#template (or fragment) length
   read1=(sample(2, nPairs, replace=TRUE)==1),    #is it the first read in the pair?
   mapq=sample(254, nPairs, replace=TRUE))        #mapping quality
 
@@ -72,38 +72,54 @@ test_that("bamCount function", {
     for (mapq in c(0, 100)){
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
-          expect_equal(
-            label=paste0("bamCount{", 
-            paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, sep="="),
-            "}"),
-            countR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq), 
-            bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, verbose=FALSE))
-  }  }  }  }
+          for (tlen.filter in list(NULL, c(50, 200))){
+              expect_equal(
+                           label=paste0("bamCount{", 
+                                        paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
+                                              "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                              sep="="),
+                                        "}"),
+                           countR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq,
+                                  tlen.filter=tlen.filter), 
+                           bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, 
+                                    tlen.filter=tlen.filter, verbose=FALSE))
+  }  }  }  }  }
 })
 
 test_that("bamProfile function", {
-  for (shift in c(0, 100)){
-    for (mapq in c(0, 100)){
+   for (shift in c(0, 100)){
+     for (mapq in c(0, 100)){
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
-          expect_equal(
-            label=paste0("bamProfile{", 
-            paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, sep="="),
-            "}"),
-            profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq), 
-            as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, verbose=FALSE)))
-  }  }  }  }
+          for (tlen.filter in list(NULL, c(50, 200))){
+              expect_equal(
+                           label=paste0("bamProfile{", 
+                                        paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
+                                              "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                              sep="="),
+                                        "}"),
+                           profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq,
+                                    tlen.filter=tlen.filter), 
+                           as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, 
+                                    tlen.filter=tlen.filter, verbose=FALSE)))
+  }  }  }  }  }
 })
 
 
 test_that("bamCoverage function", {
   for (mapq in c(0, 100)){
     for (pe in c("ignore", "extend")){
-      expect_equal(
-        label=paste0("bamCoverage{mapq=",mapq, ", pe=", pe, "}"),
-        coverageR(reads, regions, paired.end=pe, mapqual=mapq), 
-        as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, verbose=FALSE)))
-  }  }
+      for (tlen.filter in list(NULL, c(50, 200))){
+          expect_equal(
+                       label=paste0("bamCoverage{", 
+                                    paste("mapq", mapq, "pe", pe, 
+                                          "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                          sep="="),
+                                    "}"),
+                       coverageR(reads, regions, paired.end=pe, mapqual=mapq, tlen.filter=tlen.filter), 
+                       as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, tlen.filter=tlen.filter, 
+                                verbose=FALSE)))
+  }  }  }
 })
 
 #remove the temporary files

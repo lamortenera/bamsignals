@@ -13,17 +13,14 @@
 \usage{
 \S4method{bamCount}{character,GenomicRanges}(bampath, gr, mapqual = 0,
   shift = 0, ss = FALSE, paired.end = c("ignore", "filter", "midpoint"),
-  paired.end.max.frag.length = 1000, paired.end.min.frag.length = 0,
-  verbose = TRUE)
+  tlen.filter = NULL, verbose = TRUE)
 
 \S4method{bamProfile}{character,GenomicRanges}(bampath, gr, binsize = 1,
   mapqual = 0, shift = 0, ss = FALSE, paired.end = c("ignore", "filter",
-  "midpoint"), paired.end.max.frag.length = 1000,
-  paired.end.min.frag.length = 0, verbose = TRUE)
+  "midpoint"), tlen.filter = NULL, verbose = TRUE)
 
 \S4method{bamCoverage}{character,GenomicRanges}(bampath, gr, mapqual = 0,
-  paired.end = c("ignore", "extend"), paired.end.max.frag.length = 1000,
-  paired.end.min.frag.length = 0, verbose = TRUE)
+  paired.end = c("ignore", "extend"), tlen.filter = NULL, verbose = TRUE)
 }
 \arguments{
 \item{bampath}{path to the bam file storing the read. The file must be
@@ -46,26 +43,20 @@ Strand-specific profiles are twice as long then strand-independent profiles.}
 \item{paired.end}{a character string indicating how to handle paired-end 
 reads. If \code{paired.end!="ignore"} then only first reads in proper mapped
 pairs will be considered (SAMFLAG 66, i.e. in the flag of the read, the bits 
-in the mask 66 must be all ones). 
+in the mask 66 must be all ones). \cr
 If \code{paired.end=="midpoint"} then the midpoint of a filtered fragment is 
 considered, where \code{mid = fragment_start + int(abs(tlen)/2)}, and where 
 tlen is the template length stored in the bam file. For even tlen, the given 
 midpoint will be moved of 0.5 basepairs in the 3' direction (bamCount, 
-bamProfile)
+bamProfile). \cr
 If \code{paired.end=="extend"} then the whole fragment is treated 
 as a single read (bamCoverage).}
 
-\item{paired.end.max.frag.length}{the maximum length between left-, and 
-right-most mapping position of a paired read. This is considered only when 
-\code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
-\code{"extend"}. The default value (1,000) is generally a good pick. For 
-mono-nucleosomal fragments only set this value to 200.}
-
-\item{paired.end.min.frag.length}{the minimum length between left-, and 
-right-most mapping position of a paired read. This is considered only when 
-\code{paired.end} is either \code{"filter"}, \code{"midpoint"} or 
-\code{"extend"}. The default value (0) is generally a good pick. For 
-mono-nucleosomal fragments only set this value to 100.}
+\item{tlen.filter}{A filter on fragment length as estimated from alignment 
+in paired end experiments (TLEN). If set to \code{c(min,max)} only reads are 
+considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
+this argument is set to \code{NULL} and no filtering is done. If 
+\code{paired.end!="ignore"}, this argument defaults to \code{c(0,1000)}.}
 
 \item{verbose}{a logical value indicating whether verbose output is desired}
 
@@ -97,7 +88,7 @@ covering it.
 A read position is always specified by its 5' end, so a read mapping
 to the reference strand is positioned at its leftmost coordinate, a 
 read mapping to the alternative strand is positioned at its rightmost 
-coordinate. This can be changed using the \code{shift} parameter.
+coordinate. This can be changed using the \code{shift} parameter. \cr
 }
 \examples{
 ## TOY DATA ##
