@@ -1,7 +1,7 @@
 Package: bamsignals
 Type: Package
 Title: Extract read count signals from bam files
-Version: 1.4.0
+Version: 1.3.1
 Date: 2016-01-13
 Authors@R: c( person(given="Alessandro",family="Mammana",
         email="mammana@molgen.mpg.de", role=c("aut", "cre")),
@@ -10,15 +10,27 @@ Authors@R: c( person(given="Alessandro",family="Mammana",
 Author: Alessandro Mammana [aut, cre], Johannes Helmuth [aut]
 Maintainer: Alessandro Mammana <mammana@molgen.mpg.de>
 Description: This package allows to efficiently obtain count vectors
-        from indexed bam files. It counts the number of reads in given
-        genomic ranges and it computes reads profiles and coverage
-        profiles. It also handles paired-end data.
+    from indexed bam files. It counts the number of reads in given
+    genomic ranges and it computes reads profiles and coverage
+    profiles. It also handles paired-end data.
 License: GPL-2
-Depends: R (>= 3.2.0)
-Imports: methods, BiocGenerics, Rcpp (>= 0.10.6), IRanges,
-        GenomicRanges, zlibbioc
-Suggests: testthat (>= 0.9), Rsamtools, BiocStyle, knitr, rmarkdown
+Depends:
+    R (>= 3.2.0)
+Imports:
+    methods,
+    BiocGenerics,
+    Rcpp (>= 0.10.6),
+    IRanges,
+    GenomicRanges,
+    zlibbioc
+Suggests:
+    testthat (>= 0.9),
+    Rsamtools,
+    BiocStyle,
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp, Rhtslib, zlibbioc
 biocViews: DataImport, Sequencing, Coverage, Alignment
 VignetteBuilder: knitr
 NeedsCompilation: yes
+RoxygenNote: 5.0.1
