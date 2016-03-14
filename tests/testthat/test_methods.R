@@ -73,8 +73,7 @@ test_that("bamCount function", {
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
           for (tlen.filter in list(NULL, c(50, 200))){
-              expect_equal(
-                           label=paste0("bamCount{", 
+              expect_equal(label=paste0("bamCount{", 
                                         paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
                                               "tlen.filter", paste0(tlen.filter, collapse=","), 
                                               sep="="),
@@ -92,8 +91,7 @@ test_that("bamProfile function", {
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
           for (tlen.filter in list(NULL, c(50, 200))){
-              expect_equal(
-                           label=paste0("bamProfile{", 
+              expect_equal(label=paste0("bamProfile{", 
                                         paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
                                               "tlen.filter", paste0(tlen.filter, collapse=","), 
                                               sep="="),
@@ -110,8 +108,7 @@ test_that("bamCoverage function", {
   for (mapq in c(0, 100)){
     for (pe in c("ignore", "extend")){
       for (tlen.filter in list(NULL, c(50, 200))){
-          expect_equal(
-                       label=paste0("bamCoverage{", 
+          expect_equal(label=paste0("bamCoverage{", 
                                     paste("mapq", mapq, "pe", pe, 
                                           "tlen.filter", paste0(tlen.filter, collapse=","), 
                                           sep="="),
@@ -120,6 +117,27 @@ test_that("bamCoverage function", {
                        as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, tlen.filter=tlen.filter, 
                                 verbose=FALSE)))
   }  }  }
+})
+
+test_that("filtering on SAMFLAGS", {
+  strand(regions) <- "+"#need to set this for below test
+  for (shift in c(0, 100)){
+    for (mapq in c(0, 100)){
+      for (pe in c("ignore", "filter", "midpoint")){
+        for (tlen.filter in list(NULL, c(50, 200))){
+          expect_equal(label=paste0("filterFlag Test bamCount{", 
+                                    paste("shift", shift, "mapq", mapq, "pe", pe, 
+                                          "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                          sep="="),
+                                    "}"),
+                       countR(reads, regions, ss=T, shift=shift, paired.end=pe, mapqual=mapq,
+                          tlen.filter=tlen.filter)[1,], 
+                       bamCount(bampath, regions, ss=F, shift=shift, paired.end=pe, mapqual=mapq, 
+                                tlen.filter=tlen.filter, filteredFlag=16, verbose=FALSE))
+        }
+      }
+    }
+  }
 })
 
 #remove the temporary files
