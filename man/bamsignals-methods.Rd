@@ -13,14 +13,15 @@
 \usage{
 \S4method{bamCount}{character,GenomicRanges}(bampath, gr, mapqual = 0,
   shift = 0, ss = FALSE, paired.end = c("ignore", "filter", "midpoint"),
-  tlen.filter = NULL, verbose = TRUE)
+  tlen.filter = NULL, filteredFlag = -1, verbose = TRUE)
 
 \S4method{bamProfile}{character,GenomicRanges}(bampath, gr, binsize = 1,
   mapqual = 0, shift = 0, ss = FALSE, paired.end = c("ignore", "filter",
-  "midpoint"), tlen.filter = NULL, verbose = TRUE)
+  "midpoint"), tlen.filter = NULL, filteredFlag = -1, verbose = TRUE)
 
 \S4method{bamCoverage}{character,GenomicRanges}(bampath, gr, mapqual = 0,
-  paired.end = c("ignore", "extend"), tlen.filter = NULL, verbose = TRUE)
+  paired.end = c("ignore", "extend"), tlen.filter = NULL,
+  filteredFlag = -1, verbose = TRUE)
 }
 \arguments{
 \item{bampath}{path to the bam file storing the read. The file must be
@@ -57,6 +58,9 @@ in paired end experiments (TLEN). If set to \code{c(min,max)} only reads are
 considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
 this argument is set to \code{NULL} and no filtering is done. If 
 \code{paired.end!="ignore"}, this argument defaults to \code{c(0,1000)}.}
+
+\item{filteredFlag}{Filter out reads with a certain flag set, e.g. "1024" to
+filter out PCR or optical duplicates.}
 
 \item{verbose}{a logical value indicating whether verbose output is desired}
 

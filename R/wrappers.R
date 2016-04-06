@@ -52,6 +52,8 @@ NULL
 #' considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
 #' this argument is set to \code{NULL} and no filtering is done. If 
 #' \code{paired.end!="ignore"}, this argument defaults to \code{c(0,1000)}.
+#' @param filteredFlag Filter out reads with a certain flag set, e.g. "1024" to
+#' filter out PCR or optical duplicates.
 #' @param verbose a logical value indicating whether verbose output is desired
 #' @return \itemize{
 #'   \item \code{bamProfile} and \code{bamCoverage}: a CountSignals object with a signal 
@@ -105,14 +107,14 @@ setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 setMethod("bamCount", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"), 
-    tlen.filter=NULL, verbose=TRUE){
+    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
-        -1, shift, ss, flagMask(pe), (pe=="midpoint"))
+        -1, shift, ss, flagMask(pe), filteredFlag, (pe=="midpoint"))
         
         pu[[1]]
     }
@@ -129,7 +131,7 @@ setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"
 setMethod("bamProfile", c("character", "GenomicRanges"), 
     function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"),
-    tlen.filter=NULL, verbose=TRUE){
+    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         if (binsize < 1){
@@ -143,10 +145,10 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
         
         bampath <- path.expand(bampath)
         pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, binsize, 
-        shift, ss, flagMask(pe), (pe=="midpoint"))
+        shift, ss, flagMask(pe), filteredFlag, (pe=="midpoint"))
         
-        new("CountSignals", signals=pu, ss=ss)
-    }
+         new("CountSignals", signals=pu, ss=ss)
+    } 
 )
 
 #' @export
@@ -158,14 +160,14 @@ setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverag
 #' @export
 setMethod("bamCoverage", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, paired.end=c("ignore", "extend"),
-    tlen.filter=NULL, verbose=TRUE){
+    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
         pu <- coverage_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
-        flagMask(pe), (pe=="extend"))
+        flagMask(pe), filteredFlag, (pe=="extend"))
         
         new("CountSignals", signals=pu, ss=FALSE)
     }
