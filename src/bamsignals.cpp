@@ -297,8 +297,9 @@ class Pileupper{
     const int shift; 
     const bool ss;
     const int mapqual;
-    const unsigned mask;
+    const int requiredF;//a required flag
     const bool midpoint;//consider the midpoint or not
+    const int filteredF;//a filtering flag
     const int* tlen_filter; //filter on sam TLEN
     
     //these values refer to the last read and are set using "setRead"
@@ -308,10 +309,12 @@ class Pileupper{
     //true if is on the reference strand, false otherwise
     bool negstrand;
     
-    Pileupper(int abinsize, int ashift, bool ass, int amapqual, unsigned amask, bool amidpoint, 
+    Pileupper(int abinsize, int ashift, bool ass, int amapqual, 
+              int arequiredF, bool amidpoint, int afilteredF, 
               int* atlen_filter) : 
-        binsize(abinsize), shift(ashift), ss(ass), mapqual(amapqual), mask(amask), 
-        midpoint(amidpoint), tlen_filter(atlen_filter)
+        binsize(abinsize), shift(ashift), ss(ass), mapqual(amapqual), 
+        requiredF(arequiredF), midpoint(amidpoint), filteredF(afilteredF),
+        tlen_filter(atlen_filter)
     {
         pos = -1;
         negstrand = false;
@@ -322,7 +325,8 @@ class Pileupper{
     //it returns the end of the read if everything is ok, -1 otherwise
     inline int setRead(const bam1_t* read){
         //filter the read on MAPQ, SAMFLAG and ISIZE
-        if ((read->core).qual < mapqual || invalidFlag(read, mask) 
+        if ((read->core).qual < mapqual || invalidFlag(read, requiredF)
+            || !invalidFlag(read, filteredF)
             || (tlen_filter != 0 && 
                 (abs((read->core).isize) < tlen_filter[0] || 
                  abs((read->core).isize) > tlen_filter[1])))
@@ -363,7 +367,8 @@ class Coverager{
     public:
     
     const int mapqual;
-    const unsigned mask;
+    const int requiredF;//a required flag
+    const int filteredF;//a filtering flag
     const bool tspan;//consider the span of the whole read pair or not
     const int* tlen_filter; //filter on sam TLEN
     
@@ -372,8 +377,10 @@ class Coverager{
     int start;
     int end;
     
-    Coverager(int amapqual, unsigned amask, bool atspan, int* atlen_filter) :
-    mapqual(amapqual), mask(amask), tspan(atspan), tlen_filter(atlen_filter)
+    Coverager(int amapqual, int arequiredF, int afilteredF, bool atspan, 
+              int* atlen_filter) :
+        mapqual(amapqual), requiredF(arequiredF), filteredF(afilteredF), 
+        tspan(atspan), tlen_filter(atlen_filter)
     {
         start = end = -1;
     }
@@ -384,8 +391,8 @@ class Coverager{
     //it returns the end of the read if everything is ok, -1 otherwise
     inline int setRead(const bam1_t* read){
         //filter the read on MAPQ, SAMFLAG and ISIZE
-        if ((read->core).qual < mapqual 
-            || invalidFlag(read, mask) 
+        if ((read->core).qual < mapqual || invalidFlag(read, requiredF) 
+            || !invalidFlag(read, filteredF)
             || (tlen_filter != 0 && 
                (abs((read->core).isize) < tlen_filter[0] || 
                 abs((read->core).isize) > tlen_filter[1])))
@@ -434,8 +441,9 @@ class Coverager{
 //this function is called by bamProfile and bamCount.
 //when it is bamCount, then binsize <= 0
 // [[Rcpp::export]]
-List pileup_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual=0, 
-    int binsize=1, int shift=0, bool ss=false, int mask=0, bool pe_mid=false, int maxgap=16385){
+List pileup_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, 
+    int mapqual=0, int binsize=1, int shift=0, bool ss=false, int requiredF=0, 
+    int filteredF=-1, bool pe_mid=false, int maxgap=16385){
     std::vector<GArray> ranges;
     //opening bamfile and index
     Bamfile bfile(bampath);
@@ -444,7 +452,7 @@ List pileup_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, i
     //allocate memory (if binsize <= 0, binsize is set to max(width(gr)))
     List ret = allocateList(ranges, &binsize, ss);
     //pileup
-    Pileupper p(binsize, shift, ss, mapqual, mask, pe_mid, 
+    Pileupper p(binsize, shift, ss, mapqual, requiredF, pe_mid, filteredF,
                 (tlen_filter.size()==0?0:&tlen_filter[0]));
     int ext = abs(shift) + (pe_mid?tlen_filter[1]:0);
     overlapAndPileup(bfile, ranges, ext, p, maxgap);
@@ -463,8 +471,9 @@ inline void cumsum(int* C, int len){
 
 //this function is called by bamCoverage
 // [[Rcpp::export]]
-List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual=0, int mask = 0, 
-    bool tspan=false, int maxgap=16385){
+List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, 
+    int mapqual=0, int requiredF=0, int filteredF=-1, bool tspan=false, 
+    int maxgap=16385){
     std::vector<GArray> ranges;
     //opening bamfile and index
     Bamfile bfile(bampath);
@@ -473,8 +482,7 @@ List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter,
     //allocate memory
     int binsize = 1;
     List ret = allocateList(ranges, &binsize, false);
-    //pileup int amapqual, unsigned amask, bool atspan
-    Coverager c(mapqual, mask, tspan, 
+    Coverager c(mapqual, requiredF, filteredF, tspan, 
                 (tlen_filter.size()==0?0:&tlen_filter[0]));
     int ext = tspan?tlen_filter[1]:0;
     overlapAndPileup(bfile, ranges, ext, c, maxgap);

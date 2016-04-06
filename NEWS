@@ -1,7 +1,29 @@
-CHANGES IN VERSION 0.99.0
------------------------
+CHANGES IN VERSION 1.3
+-------------------------
+o Bioconductor Release (3.3) Version
 
 NEW FEATURES
 
-    o Creation of the bamsignals package, a package to
-      load count data from indexed bam files efficiently.
+     o Fragment Length Filter: 
+        Filtering of paired end read pairs by TLEN field with a minimum and
+        maximum TLEN
+     o SAMFLAG Filtering:
+        Filter out reads with a certain SAMFLAG set, e.g. 1024 for marked
+        optical duplicates
+
+BUG FIXES
+
+     o Path extension for relative paths, e.g. resolve "~" to /home/$USER in
+       UNIX
+
+CHANGES IN VERSION 1.2
+-------------------------
+o Bioconductor Release (3.2) Version
+
+CHANGES IN VERSION 1.0
+-------------------------
+o Bioconductor Release (3.1) Version
+
+CHANGES IN VERSION 0.99.0
+-------------------------
+o Inital Bioconductor Submission
