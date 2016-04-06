@@ -7,8 +7,8 @@
 
 SEXP bamsignals_checkList(SEXP lSEXP, SEXP ssSEXP);
 SEXP bamsignals_fastWidth(SEXP lSEXP, SEXP ssSEXP);
-SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP maskSEXP, SEXP pe_midSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
-SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP mapqualSEXP, SEXP maskSEXP, SEXP tspanSEXP, SEXP maxfraglengthSEXP, SEXP maxgapSEXP);
+SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP maskSEXP, SEXP pe_midSEXP, SEXP maxgapSEXP);
+SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP maskSEXP, SEXP tspanSEXP, SEXP maxgapSEXP);
 SEXP bamsignals_writeSamAsBamAndIndex(SEXP sampathSEXP, SEXP bampathSEXP);
 
 R_CallMethodDef callMethods[]  = {
