@@ -30,8 +30,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // pileup_core
-List pileup_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual, int binsize, int shift, bool ss, int mask, bool pe_mid, int maxgap);
-RcppExport SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP maskSEXP, SEXP pe_midSEXP, SEXP maxgapSEXP) {
+List pileup_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual, int binsize, int shift, bool ss, int requiredF, int filteredF, bool pe_mid, int maxgap);
+RcppExport SEXP bamsignals_pileup_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP binsizeSEXP, SEXP shiftSEXP, SEXP ssSEXP, SEXP requiredFSEXP, SEXP filteredFSEXP, SEXP pe_midSEXP, SEXP maxgapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -42,16 +42,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type binsize(binsizeSEXP);
     Rcpp::traits::input_parameter< int >::type shift(shiftSEXP);
     Rcpp::traits::input_parameter< bool >::type ss(ssSEXP);
-    Rcpp::traits::input_parameter< int >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< int >::type requiredF(requiredFSEXP);
+    Rcpp::traits::input_parameter< int >::type filteredF(filteredFSEXP);
     Rcpp::traits::input_parameter< bool >::type pe_mid(pe_midSEXP);
     Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP);
-    __result = Rcpp::wrap(pileup_core(bampath, gr, tlen_filter, mapqual, binsize, shift, ss, mask, pe_mid, maxgap));
+    __result = Rcpp::wrap(pileup_core(bampath, gr, tlen_filter, mapqual, binsize, shift, ss, requiredF, filteredF, pe_mid, maxgap));
     return __result;
 END_RCPP
 }
 // coverage_core
-List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual, int mask, bool tspan, int maxgap);
-RcppExport SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP maskSEXP, SEXP tspanSEXP, SEXP maxgapSEXP) {
+List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter, int mapqual, int requiredF, int filteredF, bool tspan, int maxgap);
+RcppExport SEXP bamsignals_coverage_core(SEXP bampathSEXP, SEXP grSEXP, SEXP tlen_filterSEXP, SEXP mapqualSEXP, SEXP requiredFSEXP, SEXP filteredFSEXP, SEXP tspanSEXP, SEXP maxgapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -59,10 +60,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< RObject& >::type gr(grSEXP);
     Rcpp::traits::input_parameter< IntegerVector& >::type tlen_filter(tlen_filterSEXP);
     Rcpp::traits::input_parameter< int >::type mapqual(mapqualSEXP);
-    Rcpp::traits::input_parameter< int >::type mask(maskSEXP);
+    Rcpp::traits::input_parameter< int >::type requiredF(requiredFSEXP);
+    Rcpp::traits::input_parameter< int >::type filteredF(filteredFSEXP);
     Rcpp::traits::input_parameter< bool >::type tspan(tspanSEXP);
     Rcpp::traits::input_parameter< int >::type maxgap(maxgapSEXP);
-    __result = Rcpp::wrap(coverage_core(bampath, gr, tlen_filter, mapqual, mask, tspan, maxgap));
+    __result = Rcpp::wrap(coverage_core(bampath, gr, tlen_filter, mapqual, requiredF, filteredF, tspan, maxgap));
     return __result;
 END_RCPP
 }
