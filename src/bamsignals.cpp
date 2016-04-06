@@ -298,8 +298,8 @@ class Pileupper{
     const bool ss;
     const int mapqual;
     const int requiredF;//a required flag
-    const int filteredF;//a filtering flag
     const bool midpoint;//consider the midpoint or not
+    const int filteredF;//a filtering flag
     const int* tlen_filter; //filter on sam TLEN
     
     //these values refer to the last read and are set using "setRead"
