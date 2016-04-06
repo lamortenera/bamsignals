@@ -124,46 +124,53 @@ readsToBam <- function(reads, bampath, refs=NULL){
 ##READS ARE IN A DATA-FRAME-LIKE FORMAT
 
 #convert the reads to a GRanges object
-df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, mapqual=0){
+df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, mapqual=0,
+                  tlen.filter=NULL){
   if (!paired.end %in% c("ignore", "filter", "midpoint", "extend"))
     stop("invalid paired.end option")
-    
-    #filter based on mapqual
-    reads <- reads[reads$mapq>=mapqual,]
-    
-    #if paired.end, discard reads that are not the first read in the pair
-    if (paired.end != "ignore") {
-        reads <- reads[reads$read1,]
+
+  #filter based on mapqual
+  reads <- reads[reads$mapq>=mapqual,]
+
+  #if paired.end, discard reads that are not the first read in the pair
+  if (paired.end != "ignore") {
+    reads <- reads[reads$read1,]
+    #filter reads on supplied maximum and minimum fragment lengths
+    if (is.null(tlen.filter)) { #defaults to c(0,1000)
+      reads <- reads[abs(reads$isize) >= 0 & abs(reads$isize) <= 1000, ]
+    } else {
+      reads <- reads[abs(reads$isize) >= tlen.filter[1] & abs(reads$isize) <= tlen.filter[2], ]
+    }
   }
-  
+
   #do as if the pair was a single read
-    if (paired.end %in% c("extend", "midpoint")){
-        isNeg <- reads$strand=="-"
-        #shift back negative reads
-        reads[isNeg,]$pos <- reads[isNeg,]$pos - abs(reads[isNeg,]$isize) + reads[isNeg,]$qwidth
-        #extend width to the template width
-        reads$qwidth <- abs(reads$isize)
-    }
-    
-    #convert to GRanges
-    gr <- GRanges(seqnames=reads$rname, strand=reads$strand, IRanges(start=reads$pos, width=reads$qwidth))
-    
-    #if paired.end.midpoint, consider only the midpoint
-    if (paired.end == "midpoint"){
-        mids <- (start(gr) + end(gr))/2
-        #take care of the rounding
-        signedMids <- mids*(2*as.integer(strand(gr)=="+")-1)
-        mids <- abs(ceiling(signedMids))
-        
-        start(gr) <- mids
-        end(gr) <- mids
-    }
-    
-    #consider shift
-    shifts <- rep(shift, length(gr))
-    shifts[as.logical(strand(gr)=="-")] <- -shift
-    
-    GenomicRanges::shift(gr, shifts)
+  if (paired.end %in% c("extend", "midpoint")){
+    isNeg <- reads$strand=="-"
+    #shift back negative reads
+    reads[isNeg,]$pos <- reads[isNeg,]$pos - abs(reads[isNeg,]$isize) + reads[isNeg,]$qwidth
+    #extend width to the template width
+    reads$qwidth <- abs(reads$isize)
+  }
+
+  #convert to GRanges
+  gr <- GRanges(seqnames=reads$rname, strand=reads$strand, IRanges(start=reads$pos, width=reads$qwidth))
+
+  #if paired.end.midpoint, consider only the midpoint
+  if (paired.end == "midpoint"){
+    mids <- (start(gr) + end(gr))/2
+    #take care of the rounding
+    signedMids <- mids*(2*as.integer(strand(gr)=="+")-1)
+    mids <- abs(ceiling(signedMids))
+
+    start(gr) <- mids
+    end(gr) <- mids
+  }
+
+  #consider shift
+  shifts <- rep(shift, length(gr))
+  shifts[as.logical(strand(gr)=="-")] <- -shift
+
+  GenomicRanges::shift(gr, shifts)
 }
 
 

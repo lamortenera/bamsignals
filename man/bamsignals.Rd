@@ -4,10 +4,10 @@
 \name{bamsignals}
 \alias{bamsignals}
 \alias{bamsignals-package}
-\title{Efficient counting of reads in a bam files}
+\title{Efficient counting of reads in a bam file}
 \description{
-Functions and classes for extracting signals from a bam file. Differently
-than the other packages, this package cannot be used to import reads in R.
+Functions and classes for extracting signals from a bam file. Differently 
+than the other packages, this package is not supposed to import reads in R.
 All the read-processing is done in C/C++ and the only output are read counts.
 }
 \author{
