@@ -17,26 +17,37 @@ BiocStyle::markdown()
 
 # Introduction to the bamsignals package
 
-The goal of the `bamsignals` package is to load count data from bam files as easily and quickly as possible. A typical workflow without the `bamsignals` package requires to firstly load all reads in R (_e.g._ using the `Rsamtools` package), secondly process them and lastly convert them into counts. The `bamsignals` package optimizes this workflow by merging these steps into one using efficient C code, which makes the whole process easier and faster. Additionally, `bamsignals` comes with native support for paired end data.
+The goal of the `bamsignals` package is to load count data from bam files as
+easily and quickly as possible. A typical workflow without the `bamsignals`
+package requires to firstly load all reads in R (_e.g._ using the `Rsamtools`
+package), secondly process them and lastly convert them into counts. The
+`bamsignals` package optimizes this workflow by merging these steps into one
+using efficient C code, which makes the whole process easier and faster.
+Additionally, `bamsignals` comes with native support for paired end data.
 
 ## Loading toy data
 
-We will use the following libraries (which are all required for installing `bamsignals`).
+We will use the following libraries (which are all required for installing
+`bamsignals`).
 ```{r message = FALSE}
 library(GenomicRanges)
 library(Rsamtools)
 library(bamsignals)
 ```
 
-In the following we will use a sorted and indexed bam file and a gene annotation.
+In the following we will use a sorted and indexed bam file and a gene
+annotation.
 ```{r}
 bampath <- system.file("extdata", "randomBam.bam", package="bamsignals")
 genes <- 
-	get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
+  get(load(system.file("extdata", "randomAnnot.Rdata", package="bamsignals")))
 genes
 ```
 
-The chromosome names in the bam file and those in the `GenomicRanges` object need to match. Additionally, the bam file needs to be sorted and indexed. Note that `bamsignals` requires the bam index to be named like bam file with ".bai" suffix.
+The chromosome names in the bam file and those in the `GenomicRanges` object
+need to match. Additionally, the bam file needs to be sorted and indexed. Note
+that `bamsignals` requires the bam index to be named like bam file with ".bai"
+suffix.
 
 ```{r}
 #sequence names of the GenomicRanges object
@@ -52,17 +63,28 @@ file.exists(gsub(".bam$", ".bam.bai", bampath))
 ## Counting reads in given ranges with `bamCount()`
 
 ### Basic counting
-Let's count how many reads map to the promoter regions of our genes. Using the `bamCount()` function, this is straightforward.
+Let's count how many reads map to the promoter regions of our genes. Using the
+`bamCount()` function, this is straightforward.
 
 ```{r}
 proms <- GenomicRanges::promoters(genes, upstream=100, downstream=100)
 counts <- bamCount(bampath, proms, verbose=FALSE)
 str(counts)
 ```
-The object `counts` is a vector of the same length as the number of ranges that we are analyzing, the `i`-th count corresponds to the `i`-th range.
+The object `counts` is a vector of the same length as the number of ranges that
+we are analyzing, the `i`-th count corresponds to the `i`-th range.
 
 ### Accounting for fragment length
-With the `bamCount()` function a read is counted in a range if the 5' end of the read falls in that range. This might be appropriate when analyzing DNase I hypersensitivity tags, however for ChIP-seq data the immunoprecipitated protein is normally located downstream with respect to the 5' end of the sequenced reads. To correct for that, it is possible to count reads with a strand-specific shift, _i.e._ reads will be counted in a range if the shifted 5' end falls in that range. Note that this shift will move reads mapped to the positive strand to the right and reads mapped to the negative strand to the left with respect to the reference orientation. The shift should correspond approximately to half of the average length of the fragments in the sequencing experiment.
+With the `bamCount()` function a read is counted in a range if the 5' end of the
+read falls in that range. This might be appropriate when analyzing DNase I
+hypersensitivity tags, however for ChIP-seq data the immunoprecipitated protein
+is normally located downstream with respect to the 5' end of the sequenced
+reads. To correct for that, it is possible to count reads with a strand-specific
+shift, _i.e._ reads will be counted in a range if the shifted 5' end falls in
+that range. Note that this shift will move reads mapped to the positive strand
+to the right and reads mapped to the negative strand to the left with respect to
+the reference orientation. The shift should correspond approximately to half of
+the average length of the fragments in the sequencing experiment.
 
 ```{r}
 counts <- bamCount(bampath, proms, verbose=FALSE, shift=75)
@@ -70,7 +92,9 @@ str(counts)
 ```
 
 ### Counting on each strand separately
-Sometimes it is necessary to consider the two genomic strands separately. This is achieved with the `ss` option (separate strands, or strand-specific), and depends also on the strand of the `GenomicRanges` object.
+Sometimes it is necessary to consider the two genomic strands separately. This
+is achieved with the `ss` option (separate strands, or strand-specific), and
+depends also on the strand of the `GenomicRanges` object.
 
 ```{r}
 strand(proms)
@@ -78,16 +102,22 @@ counts <- bamCount(bampath, proms, verbose=FALSE, ss=TRUE)
 str(counts)
 ```
 
-Now `counts` is a matrix with two rows, one for the sense strand, the other for the antisense strand. Note that the sense of a read is decided also by the region it falls into, so if both the region and the read are on the same strand the read is counted as a sense read, otherwise as an antisense read.
+Now `counts` is a matrix with two rows, one for the sense strand, the other for
+the antisense strand. Note that the sense of a read is decided also by the
+region it falls into, so if both the region and the read are on the same strand
+the read is counted as a sense read, otherwise as an antisense read.
 
 ## Read profiles for each region with `bamProfile()`
 
-If you are interested in counting how many reads map to each base pair of your genes, the `bamProfile()` function might save you a day.
+If you are interested in counting how many reads map to each base pair of your
+genes, the `bamProfile()` function might save you a day.
 ```{r}
 sigs <- bamProfile(bampath, genes, verbose=FALSE)
 sigs
 ```
-The `CountSignals` class is a read-only container for count vectors. Conceptually it is like a `list` of vectors, and in fact it can be immediately converted to that format.
+The `CountSignals` class is a read-only container for count vectors.
+Conceptually it is like a `list` of vectors, and in fact it can be immediately
+converted to that format.
 ```{r}
 #CountSignals is conceptually like a list
 lsigs <- as.list(sigs)
@@ -96,14 +126,17 @@ stopifnot(length(lsigs[[1]])==length(sigs[1]))
 stopifnot(all(sapply(sigs, sum) == sapply(lsigs, sum)))
 ```
 
-Similarly as for the `count` function, the `CountSignals` object has as many elements (called `signals`) as there are ranges, and the `i`-th signal corresponds to the `i`-th range.
+Similarly as for the `bamCount` function, the `CountSignals` object has as many
+elements (called `signals`) as there are ranges, and the `i`-th signal
+corresponds to the `i`-th range.
 
 ```{r}
 stopifnot(all(width(sigs)==width(genes)))
 ```
 
 ### Counting on each strand separately
-As for the `bamCount()` function, also with `bamProfile()` the reads can be counted for each strand separately
+As for the `bamCount()` function, also with `bamProfile()` the reads can be
+counted for each strand separately
 ```{r}
 sssigs <- bamProfile(bampath, genes, verbose=FALSE, ss=TRUE)
 sssigs
@@ -123,17 +156,19 @@ Let's summarize this with a plot
 xlab <- "offset from start of the region"
 ylab <- "counts per base pair (negative means antisense)"
 main <- paste0("read profile of the region ", 
-	seqnames(genes)[1], ":", start(genes)[1], "-", end(genes)[1])
+  seqnames(genes)[1], ":", start(genes)[1], "-", end(genes)[1])
 plot(sigs[1], ylim=c(-max(sigs[1]), max(sigs[1])), ylab=ylab, xlab=xlab, 
-	main=main, type="l")
+  main=main, type="l")
 lines(sssigs[1]["sense",], col="blue")
 lines(-sssigs[1]["antisense",], col="red")
-legend("topright", c("sense", "antisense", "both"), 
-	col=c("blue", "red", "black"), lty=1)
+legend("bottom", c("sense", "antisense", "both"), 
+  col=c("blue", "red", "black"), lty=1)
 ```
 
 ### Regions of the same width
-In case our ranges have all the same width, a `CountSignals` object can be immediately converted into a matrix, or an array, with the `alignSignals` function
+In case our ranges have all the same width, a `CountSignals` object can be
+immediately converted into a matrix, or an array, with the `alignSignals`
+function
 ```{r}
 #The promoter regions have all the same width
 sigs <- bamProfile(bampath, proms, ss=FALSE, verbose=FALSE)
@@ -144,8 +179,11 @@ sigsArr <- alignSignals(sssigs)
 
 ```
 
-The last dimension of the resulting array (or matrix) represents the different ranges, the second-last one represents the base pairs in each region, and in the strand-specific case, the first-one represents the strand of the signal. This can be changed by using the `t()` function (for matrices) or `aperm()` (for arrays).
-
+The last dimension of the resulting array (or matrix) represents the different
+ranges, the second-last one represents the base pairs in each region, and in the
+strand-specific case, the first-one represents the strand of the signal. This
+can be changed by using the `t()` function (for matrices) or `aperm()` (for
+arrays).
 ```{r}
 #the dimensions are [base pair, region]
 str(sigsMat)
@@ -155,7 +193,8 @@ str(sigsArr)
 stopifnot(all(sigsMat == sigsArr["sense",,] + sigsArr["antisense",,]))
 ```
 
-Computing the average read profile at promoters in `proms` is now straightforward
+Computing the average read profile at promoters in `proms` is now
+straightforward
 ```{r}
 avgSig <- rowMeans(sigsMat)
 avgSenseSig <- rowMeans(sigsArr["sense",,])
@@ -165,24 +204,29 @@ xlab <- "distance from TSS"
 main <- paste0("average profile of ", length(proms), " promoters")
 xs <- -99:100
 plot(xs, avgSig, ylim=c(0, max(avgSig)), xlab=xlab, ylab=ylab, main=main,
-	type="l")
+  type="l")
 lines(xs, avgSenseSig, col="blue")
 lines(xs, avgAntisenseSig, col="red")
-legend("topright", c("sense", "antisense", "both"), 
-	col=c("blue", "red", "black"), lty=1)
+legend("bottom", c("sense", "antisense", "both"), 
+  col=c("blue", "red", "black"), lty=1)
 ```
 
 ### Binning counts
-
-Very often it is better to count reads mapping to small regions instead of single base pairs. Bins are small non-overlapping regions of fixed size tiling a larger region. Instead of splitting your regions of interest into bins, it is easier and much more efficient to provide the `binsize` option to `bamProfile()`.
+Very often it is better to count reads mapping to small regions instead of
+single base pairs. Bins are small non-overlapping regions of fixed size tiling a
+larger region. Instead of splitting your regions of interest into bins, it is
+easier and much more efficient to provide the `binsize` option to
+`bamProfile()`.
 ```{r}
 
 binsize <- 20
-binnedSigs <- bamProfile(bampath, proms, binsize=binsize)
+binnedSigs <- bamProfile(bampath, proms, binsize=binsize, verbose=F)
 stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs
 ```
-In case the ranges' widths are not multiples of the bin size, a warning will be issued and the last bin in those ranges will be smaller than the others (where "last" depends on the orientation of the region).
+In case the ranges' widths are not multiples of the bin size, a warning will be
+issued and the last bin in those ranges will be smaller than the others (where
+"last" depends on the orientation of the region).
 
 Binning means considering a `signal` at a lower resolution.
 ```{r}
@@ -199,31 +243,123 @@ legend("topright", c("base pair count", "bin count"), lty=c(1, 2))
 
 ## Read coverage with `bamCoverage()`
 
-Instead of counting the 5' end of each read, you may want to count how many reads overlap each base pair, you should check out the `bamCoverage()` function.
+Instead of counting the 5' end of each read, you may want to count how many
+reads overlap each base pair, you should check out the `bamCoverage()` function
+which gives you a smooth read coverage profile by considering the whole read
+length and not just the 5' end:
 ```{r}
 covSigs <- bamCoverage(bampath, genes, verbose=FALSE)
 puSigs <- bamProfile(bampath, genes, verbose=FALSE)
 xlab <- "offset from start of the region"
 ylab <- "reads per base pair"
 main <- paste0("read coverage and profile of the region ", seqnames(genes)[1],
-	":", start(genes)[1], "-", end(genes)[1])
+  ":", start(genes)[1], "-", end(genes)[1])
 plot(covSigs[1], ylim=c(0, max(covSigs[1])), ylab=ylab, xlab=xlab, main=main,
-	type="l")
+  type="l")
 lines(puSigs[1], lty=2)
 legend("topright", c("covering the base pair", "5' end maps to the base pair"), 
-	lty=c(1,2))
+  lty=c(1,2))
 ```
 
-# Notes
 
-## Paired end data handling
-
-All bamsignal count, profile and coverage methods discussed above support dealing with paired end sequencing data. With `paired.end!="ignore"`, only the first read in a properly aligned pair is considered (this constraint translates into the bitmask 66 for the flag of a read). The strand of this read defines the strand of the pair. Considering only one read avoids counting both reads in read pair which may bias downstream analysis. For `bamCoverage()` and `paired.end=="extend"` the coverage computes how many fragments overlap each base pair. The actual length of a fragment is stored in the TLEN field of a bam file. For `bamCount()` and `bamProfile()` the option `paired.end="midpoint"`  shifts the counting position from the 5'end to the midpoint of the fragment. For `bamCoverage()` the option `paired.end="extend"` considers only the first read in a properly aligned pair and comput
+# Advanced bamsignals filtering options
 
 ## Exclude ambiguous reads with the `mapq` argument
-
-Most mapping software (_e.g._ bwa, bowtie2) stores information about mapping confidence in the MAPQ field of a bam file. In general, it is recommended to exclude reads with bad mapping quality because their mapping location is ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is at least a 1 in 20 chance that the read truly originated elsewhere. In that case, the `mapq` argument is helpful.
-
+Most mapping software (_e.g._ bwa, bowtie2) stores information about mapping
+confidence in the __MAPQ__ field of a bam file. In general, it is recommended to
+exclude reads with bad mapping quality because their mapping location is
+ambiguous. In bowtie2, a mapping quality of 20 or less indicates that there is
+at least a 1 in 20 chance that the read truly originated elsewhere. In that
+case, the `mapq` argument is a lower bound on __MAPQ__:
 ```{r}
-counts <- bamCount(bampath, proms, mapq=20, verbose=FALSE)
+counts.all <- bamCount(bampath, proms, verbose=FALSE)
+summary(counts.all)
+counts.mapq <- bamCount(bampath, proms, mapq=20, verbose=FALSE)
+summary(counts.mapq)
 ```
+
+## Filter reads with the `filteredFlag` argument
+Analogously to the __MAPQ__ field, every bam contains a __SAMFLAG__ field where
+the mapping software or the post-processing software (_e.g._ picard)
+stores information on the read. See [Decoding SAM
+flags](https://broadinstitute.github.io/picard/explain-flags.html) for
+explanation. For instance, a __SAMFLAG__ of 1024 indicates a optical
+duplicate. We would like to _filter out_ optical duplicate reads with
+`filteredFlag=1024` from the read counts with __MAPQ__ >= 19 to get a higher
+confidence on the results:
+```{r}
+counts.mapq.noDups <- bamCount(bampath, proms, mapq=20, filteredFlag=1024, verbose=FALSE)
+summary(counts.mapq.noDups)
+```
+
+
+# Paired End Data
+
+## Paired end data handling with the `paired.end` argument
+All `bamsignals` methods (`bamCount()`, `bamProfile()` and `bamCoverage()`)
+discussed above support dealing with paired end sequencing data. Considering
+only one read avoids counting both reads in read pair which may bias downstream
+analysis. The argument `paired.end` can be set to `ignore` (treat like single
+end), `filter` (consider 5'-end of first read in a properly aligned pair, _i.e._
+__SAMFLAG__=66) or `midpoint` (consider the midpoint of an aligned fragment).
+Please note, that the strand of the first read in a pair defines the strand of
+fragment. 
+```{r}
+#5' end falls into regions defined in `proms`
+counts.pe.filter <- bamCount(bampath, proms, paired.end="filter", verbose=FALSE)
+summary(counts.pe.filter)
+
+#fragment midpoint falls into regions defined in `proms`
+counts.pe.midpoint <- bamCount(bampath, proms, paired.end="midpoint", verbose=FALSE)
+summary(counts.pe.midpoint)
+
+#counts are similar but not identical
+cor(counts.pe.filter, counts.pe.midpoint)
+```
+
+For `bamCoverage()`, `paired.end=="midpoint"` is not defined. However,
+`paired.end=="extend"` computes "how many fragments cover each base pair" (as
+opposed to "how many reads cover each base pair" in the single end case). This
+is done by utilizing the actual length of a fragment is stored in the __TLEN__
+field of the paired end bam file. The result is a very smooth coverage plot:
+```{r}
+covSigs <- bamCoverage(bampath, genes, paired.end="extend", verbose=FALSE)
+puSigs <- bamProfile(bampath, genes, paired.end="midpoint", verbose=FALSE)
+xlab <- "offset from start of the region"
+ylab <- "reads per base pair"
+main <- paste0("Paired end whole fragment coverage and fragment midpoint profile\n", 
+  "of the region ", seqnames(genes)[1], ":", start(genes)[1], "-",
+  end(genes)[1])
+plot(covSigs[1], ylim=c(0, max(covSigs[1])), ylab=ylab, xlab=xlab, main=main,
+  type="l")
+lines(puSigs[1], lty=2)
+legend("topright", c("covering the base pair", "fragment midpoint maps to the base pair"), 
+  lty=c(1,2))
+```
+
+## Filtering fragments with the `tlenFilter` argument
+In paired end data, the actual fragment length can be inferred from the distance
+between two read mates. This information is then stored in the __TLEN__ field of
+a bam file. One might need to filter for fragments within a certain "allowed"
+size, _e.g._ mono-nucleosomal fragments in ChIP-seq.
+```{r}
+counts.monoNucl <- bamCount(bampath, genes, paired.end="midpoint", tlenFilter=c(120,170), verbose=FALSE)
+summary(counts.monoNucl)
+
+#Coverage of mononucleosomal fragments
+covSigs.monoNucl <- bamCoverage(bampath, genes, paired.end="extend", tlenFilter=c(120,170), verbose=FALSE)
+xlab <- "offset from start of the region"
+ylab <- "reads per base pair"
+main <- paste0("Paired end whole fragment coverage for\n", 
+  "of the region ", seqnames(genes)[1], ":", start(genes)[1], "-",
+  end(genes)[1])
+plot(covSigs[1], ylim=c(0, max(covSigs[1])), ylab=ylab, xlab=xlab, main=main,
+  type="l")
+lines(covSigs.monoNucl[1], lty=3)
+legend("topright", c("all fragment sizes", "mononucleosomal fragments only"), 
+  lty=c(1,3))
+```
+
+There are many more use cases for `tlenFilter`, _e.g._ count only long range
+reads in ChIA-PET or HiC data or profile only very small fragments in
+ChIP-exo/nexus data.
