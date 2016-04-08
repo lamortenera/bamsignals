@@ -56,8 +56,8 @@ readsToBam <- function(reads, bampath, refs=NULL){
     
     
     #compute the flag
-    reads$flag <- 0x10*(reads$strand=="-")
-    if (pe) reads$flag <- reads$flag + 0x1 + 0x2 + 0x80 + (0x40-0x80)*reads$read1 + 0x20*(reads$strand=="+")
+    #reads$flag <- 0x10*(reads$strand=="-")
+    #if (pe) reads$flag <- reads$flag + 0x1 + 0x2 + 0x80 + (0x40-0x80)*reads$read1 + 0x20*(reads$strand=="+")
     
     
     #deal with the references
@@ -119,13 +119,64 @@ readsToBam <- function(reads, bampath, refs=NULL){
     file.remove(tmpsam)
 }
 
+generateToyData <- function() {
+  nRef <- c("chr1", "chr2", "chr3")  #number of chromosomes
+  lastStart <- 1e4 #last start of a read pair (i.e. chromosome length more or less)
+  nPairs <- 5e4 #number of read pairs
+  avgRLen <- 30 #average read length
+  avgFLen <- 150 #average fragment length or template length
+  nRemove <- 1e3 #remove random reads from the pairs
+  bampath <- paste0(tempfile(), ".bam") #path where to save the bam file
+
+  #generate reads
+  posReads <- data.frame(
+    rname=sample(nRef, nPairs, replace=TRUE),      #chromosome name
+    pos=sample(sample(100:lastStart, 1e3, replace=T), nPairs, replace=T) 
+        + as.integer(rnorm(nPairs,0,30)), #start of the read
+    qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),    #length of the read
+    strand=rep("+", nPairs),                       #strand
+    isize=1+rnbinom(nPairs, mu=(avgFLen-1), size=10),#template (or fragment) length
+    read1=(sample(2, nPairs, replace=TRUE)==1),    #is it the first read in the pair?
+    mapq=rnbinom(nPairs,size=20,prob=.5),          #mapping quality
+    flag=0x0)                                      #flag 0 for positive read
+
+  negReads <- data.frame(
+    rname=posReads$rname,
+    qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),
+    strand=rep("-", nPairs),
+    isize=-posReads$isize,
+    read1=!posReads$read1,
+    mapq=rnbinom(nPairs,size=20,prob=.5),
+    flag=0x10)
+  negReads$pos <- posReads$pos + posReads$isize - negReads$qwidth
+  posReads$pnext <- negReads$pos
+  negReads$pnext <- posReads$pos
+
+  #mark duplicates 
+  dups <- which(duplicated(cbind(posReads[,1:2], negReads[,1:2])))
+  posReads$flag[dups] <- posReads$flag[dups] + 0x400
+  negReads$flag[dups] <- negReads$flag[dups] + 0x400
+
+  ##merge pos and neg reads and remove some of them
+  reads <- rbind(posReads, negReads)
+  reads <- reads[-sample(nrow(reads), nRemove),]
+
+  #set paired end flags
+  reads$flag <- reads$flag + 0x1 + 0x2 + 0x80 + (0x40-0x80)*reads$read1 + 0x20*(reads$strand=="+")
+
+  #write to a bam file
+  bampath <- "inst/extdata/randomBam.bam"
+  readsToBam(reads, bampath)
+  save(reads, file="inst/extdata/randomReads.RData")
+}
+
 
 ##REWRITE BAMSIGNALS FUNCTIONS IN R
 ##READS ARE IN A DATA-FRAME-LIKE FORMAT
 
 #convert the reads to a GRanges object
 df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, mapqual=0,
-                  tlen.filter=NULL){
+                  tlenFilter=NULL){
   if (!paired.end %in% c("ignore", "filter", "midpoint", "extend"))
     stop("invalid paired.end option")
 
@@ -136,10 +187,10 @@ df2gr <- function(reads, paired.end=FALSE, paired.end.midpoint=FALSE, shift=0, m
   if (paired.end != "ignore") {
     reads <- reads[reads$read1,]
     #filter reads on supplied maximum and minimum fragment lengths
-    if (is.null(tlen.filter)) { #defaults to c(0,1000)
+    if (is.null(tlenFilter)) { #defaults to c(0,1000)
       reads <- reads[abs(reads$isize) >= 0 & abs(reads$isize) <= 1000, ]
     } else {
-      reads <- reads[abs(reads$isize) >= tlen.filter[1] & abs(reads$isize) <= tlen.filter[2], ]
+      reads <- reads[abs(reads$isize) >= tlenFilter[1] & abs(reads$isize) <= tlenFilter[2], ]
     }
   }
 

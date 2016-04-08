@@ -3,58 +3,21 @@ library(GenomicRanges)
 library(Rsamtools)
 source("utils.R")
 
-
-## GENERATE TOY DATA ##
-##reads
-nRef <- 3  #number of chromosomes
-lastStart <- 1e3 #last start of a read pair (i.e. chromosome length more or less)
-nPairs <- 1e5 #number of read pairs
-avgRLen <- 30 #average read length
-avgFLen <- 150 #average fragment length or template length
-nRemove <- 1e3 #remove random reads from the pairs
-bampath <- paste0(tempfile(), ".bam") #path where to save the bam file
-
-##regions
-nRegions <- 20    #number of regions
-avgRegLen <- 200  #average region length
-
-
-#generate reads
-posReads <- data.frame(
-  rname=sample(nRef, nPairs, replace=TRUE),      #chromosome name
-  pos=sample(lastStart, nPairs, replace=TRUE),  #start of the read
-  qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),    #length of the read
-  strand=rep("+", nPairs),                       #strand
-  isize=1+rnbinom(nPairs, mu=(avgFLen-1), size=10),#template (or fragment) length
-  read1=(sample(2, nPairs, replace=TRUE)==1),    #is it the first read in the pair?
-  mapq=sample(254, nPairs, replace=TRUE))        #mapping quality
-
-negReads <- data.frame(
-  rname=posReads$rname,
-  qwidth=1+rpois(nPairs, lambda=(avgRLen-1)),
-  strand=rep("-", nPairs),
-  isize=-posReads$isize,
-  read1=!posReads$read1,
-  mapq=sample(254, nPairs, replace=TRUE))
-negReads$pos <- posReads$pos + posReads$isize - negReads$qwidth
-posReads$pnext <- negReads$pos
-negReads$pnext <- posReads$pos
-
-reads <- rbind(posReads, negReads)
-#remove some of them
-reads <- reads[-sample(nrow(reads), nRemove),]
-
-#write to a bam file
-readsToBam(reads, bampath)
+#toy data
+reads <- get(load("randomReads.RData"))
+bampath <- system.file("extdata", "randomBam.bam", package="bamsignals")
 
 #generate regions
+nRef <- c("chr1", "chr2", "chr3")  #number of chromosomes
+nRegions <- 20    #number of regions
+lastStart <- 1e3 #last start of a read pair (i.e. chromosome length more or less)
+avgRegLen <- 200  #average region length
 regions <- GRanges(
   seqnames=sample(nRef, nRegions, replace=TRUE),
   strand=sample(c("+", "-"), nRegions, replace=TRUE),
   ranges=IRanges(
-    start=sample(lastStart, nRegions, replace=TRUE), 
+    start=sample( lastStart, nRegions, replace=TRUE), 
     width=1+rpois(nRegions, lambda=(avgRegLen-1))))
-
 
 
 getPem <- function(pe){
@@ -72,16 +35,16 @@ test_that("bamCount function", {
     for (mapq in c(0, 100)){
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
-          for (tlen.filter in list(NULL, c(50, 200))){
+          for (tlenFilter in list(NULL, c(50, 200))){
               expect_equal(label=paste0("bamCount{", 
                                         paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
-                                              "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                              "tlenFilter", paste0(tlenFilter, collapse=","), 
                                               sep="="),
                                         "}"),
                            countR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq,
-                                  tlen.filter=tlen.filter), 
+                                  tlenFilter=tlenFilter), 
                            bamCount(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, 
-                                    tlen.filter=tlen.filter, verbose=FALSE))
+                                    tlenFilter=tlenFilter, verbose=FALSE))
   }  }  }  }  }
 })
 
@@ -90,16 +53,16 @@ test_that("bamProfile function", {
      for (mapq in c(0, 100)){
       for (ss in c(FALSE, TRUE)){
         for (pe in c("ignore", "filter", "midpoint")){
-          for (tlen.filter in list(NULL, c(50, 200))){
+          for (tlenFilter in list(NULL, c(50, 200))){
               expect_equal(label=paste0("bamProfile{", 
                                         paste("shift", shift, "mapq", mapq, "ss", ss, "pe", pe, 
-                                              "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                              "tlenFilter", paste0(tlenFilter, collapse=","), 
                                               sep="="),
                                         "}"),
                            profileR(reads, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq,
-                                    tlen.filter=tlen.filter), 
+                                    tlenFilter=tlenFilter), 
                            as.list(bamProfile(bampath, regions, ss=ss, shift=shift, paired.end=pe, mapqual=mapq, 
-                                    tlen.filter=tlen.filter, verbose=FALSE)))
+                                    tlenFilter=tlenFilter, verbose=FALSE)))
   }  }  }  }  }
 })
 
@@ -107,14 +70,14 @@ test_that("bamProfile function", {
 test_that("bamCoverage function", {
   for (mapq in c(0, 100)){
     for (pe in c("ignore", "extend")){
-      for (tlen.filter in list(NULL, c(50, 200))){
+      for (tlenFilter in list(NULL, c(50, 200))){
           expect_equal(label=paste0("bamCoverage{", 
                                     paste("mapq", mapq, "pe", pe, 
-                                          "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                          "tlenFilter", paste0(tlenFilter, collapse=","), 
                                           sep="="),
                                     "}"),
-                       coverageR(reads, regions, paired.end=pe, mapqual=mapq, tlen.filter=tlen.filter), 
-                       as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, tlen.filter=tlen.filter, 
+                       coverageR(reads, regions, paired.end=pe, mapqual=mapq, tlenFilter=tlenFilter), 
+                       as.list(bamCoverage(bampath, regions, paired.end=pe, mapqual=mapq, tlenFilter=tlenFilter, 
                                 verbose=FALSE)))
   }  }  }
 })
@@ -124,22 +87,19 @@ test_that("filtering on SAMFLAGS", {
   for (shift in c(0, 100)){
     for (mapq in c(0, 100)){
       for (pe in c("ignore", "filter", "midpoint")){
-        for (tlen.filter in list(NULL, c(50, 200))){
+        for (tlenFilter in list(NULL, c(50, 200))){
           expect_equal(label=paste0("filterFlag Test bamCount{", 
                                     paste("shift", shift, "mapq", mapq, "pe", pe, 
-                                          "tlen.filter", paste0(tlen.filter, collapse=","), 
+                                          "tlenFilter", paste0(tlenFilter, collapse=","), 
                                           sep="="),
                                     "}"),
                        countR(reads, regions, ss=T, shift=shift, paired.end=pe, mapqual=mapq,
-                          tlen.filter=tlen.filter)[1,], 
+                          tlenFilter=tlenFilter)[1,], 
                        bamCount(bampath, regions, ss=F, shift=shift, paired.end=pe, mapqual=mapq, 
-                                tlen.filter=tlen.filter, filteredFlag=16, verbose=FALSE))
+                                tlenFilter=tlenFilter, filteredFlag=16, verbose=FALSE))
         }
       }
     }
   }
 })
-
-#remove the temporary files
-unlink(paste0(bampath, c("", ".bai")))
 

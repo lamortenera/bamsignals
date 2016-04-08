@@ -13,14 +13,14 @@
 \usage{
 \S4method{bamCount}{character,GenomicRanges}(bampath, gr, mapqual = 0,
   shift = 0, ss = FALSE, paired.end = c("ignore", "filter", "midpoint"),
-  tlen.filter = NULL, filteredFlag = -1, verbose = TRUE)
+  tlenFilter = NULL, filteredFlag = -1, verbose = TRUE)
 
 \S4method{bamProfile}{character,GenomicRanges}(bampath, gr, binsize = 1,
   mapqual = 0, shift = 0, ss = FALSE, paired.end = c("ignore", "filter",
-  "midpoint"), tlen.filter = NULL, filteredFlag = -1, verbose = TRUE)
+  "midpoint"), tlenFilter = NULL, filteredFlag = -1, verbose = TRUE)
 
 \S4method{bamCoverage}{character,GenomicRanges}(bampath, gr, mapqual = 0,
-  paired.end = c("ignore", "extend"), tlen.filter = NULL,
+  paired.end = c("ignore", "extend"), tlenFilter = NULL,
   filteredFlag = -1, verbose = TRUE)
 }
 \arguments{
@@ -53,7 +53,7 @@ bamProfile). \cr
 If \code{paired.end=="extend"} then the whole fragment is treated 
 as a single read (bamCoverage).}
 
-\item{tlen.filter}{A filter on fragment length as estimated from alignment 
+\item{tlenFilter}{A filter on fragment length as estimated from alignment 
 in paired end experiments (TLEN). If set to \code{c(min,max)} only reads are 
 considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
 this argument is set to \code{NULL} and no filtering is done. If 

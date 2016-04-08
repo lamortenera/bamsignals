@@ -47,7 +47,7 @@ NULL
 #' bamProfile). \cr
 #' If \code{paired.end=="extend"} then the whole fragment is treated 
 #' as a single read (bamCoverage).
-#' @param tlen.filter A filter on fragment length as estimated from alignment 
+#' @param tlenFilter A filter on fragment length as estimated from alignment 
 #' in paired end experiments (TLEN). If set to \code{c(min,max)} only reads are 
 #' considered where \code{min <= TLEN <= max}. If \code{paired.end=="ignore"}, 
 #' this argument is set to \code{NULL} and no filtering is done. If 
@@ -82,20 +82,20 @@ flagMask <- function(paired.end){
 }
 
 #helper functions to set the right flag
-tlenFilter <- function(tlen.filter, paired.end){
+tlenFilter <- function(tlenFilter, paired.end){
   #No filtering if paired end is ignored
   if (paired.end == "ignore") return(integer())
-  #Default filter if tlen.filter is unset
-  if (is.null(tlen.filter)) return(c(0,1000))
-  #Check supplied tlen.filter
-  if (length(tlen.filter) != 2 || tlen.filter[1] < 0 ||
-      tlen.filter[2] < 0) {
-    stop("tlen.filter must be NULL or vector of 2 positive integers")
+  #Default filter if tlenFilter is unset
+  if (is.null(tlenFilter)) return(c(0,1000))
+  #Check supplied tlenFilter
+  if (length(tlenFilter) != 2 || tlenFilter[1] < 0 ||
+      tlenFilter[2] < 0) {
+    stop("tlenFilter must be NULL or vector of 2 positive integers")
   } 
-  if (tlen.filter[1] > tlen.filter[2]) {
-    stop("tlen.filter[1] must be smaller or equal to tlen.filter[2]")
+  if (tlenFilter[1] > tlenFilter[2]) {
+    stop("tlenFilter[1] must be smaller or equal to tlenFilter[2]")
   }
-  tlen.filter
+  tlenFilter
 }
 
 #' @export
@@ -107,13 +107,13 @@ setGeneric("bamCount", function(bampath, gr, ...) standardGeneric("bamCount"))
 setMethod("bamCount", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"), 
-    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
+    tlenFilter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
+        pu <- pileup_core(bampath, gr, tlenFilter(tlenFilter, pe), mapqual, 
         -1, shift, ss, flagMask(pe), filteredFlag, (pe=="midpoint"))
         
         pu[[1]]
@@ -131,7 +131,7 @@ setGeneric("bamProfile", function(bampath, gr, ...) standardGeneric("bamProfile"
 setMethod("bamProfile", c("character", "GenomicRanges"), 
     function(bampath, gr, binsize=1, mapqual=0, shift=0, ss=FALSE, 
     paired.end=c("ignore", "filter", "midpoint"),
-    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
+    tlenFilter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         if (binsize < 1){
@@ -144,7 +144,7 @@ setMethod("bamProfile", c("character", "GenomicRanges"),
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- pileup_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, binsize, 
+        pu <- pileup_core(bampath, gr, tlenFilter(tlenFilter, pe), mapqual, binsize, 
         shift, ss, flagMask(pe), filteredFlag, (pe=="midpoint"))
         
          new("CountSignals", signals=pu, ss=ss)
@@ -160,13 +160,13 @@ setGeneric("bamCoverage", function(bampath, gr, ...) standardGeneric("bamCoverag
 #' @export
 setMethod("bamCoverage", c("character", "GenomicRanges"), 
     function(bampath, gr, mapqual=0, paired.end=c("ignore", "extend"),
-    tlen.filter=NULL, filteredFlag=-1, verbose=TRUE){
+    tlenFilter=NULL, filteredFlag=-1, verbose=TRUE){
         if (verbose) printStupidSentence(bampath)
         
         pe <- match.arg(paired.end)
         
         bampath <- path.expand(bampath)
-        pu <- coverage_core(bampath, gr, tlenFilter(tlen.filter, pe), mapqual, 
+        pu <- coverage_core(bampath, gr, tlenFilter(tlenFilter, pe), mapqual, 
         flagMask(pe), filteredFlag, (pe=="extend"))
         
         new("CountSignals", signals=pu, ss=FALSE)
