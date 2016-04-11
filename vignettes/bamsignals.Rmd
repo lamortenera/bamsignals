@@ -220,7 +220,7 @@ easier and much more efficient to provide the `binsize` option to
 ```{r}
 
 binsize <- 20
-binnedSigs <- bamProfile(bampath, proms, binsize=binsize, verbose=F)
+binnedSigs <- bamProfile(bampath, proms, binsize=binsize, verbose=FALSE)
 stopifnot(all(width(binnedSigs)==ceiling(width(sigs)/binsize)))
 binnedSigs
 ```
