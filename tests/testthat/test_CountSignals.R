@@ -10,7 +10,8 @@ runs <- function(expr){
 	res <- try(force(expr), TRUE)
 	msg1 <- "code did not generate an error"
 	msg2 <- "code generated an error"
-	expectation(!inherits(res, "try-error"), msg2, msg1)
+	#expectation(!inherits(res, "try-error"), msg2, msg1)
+	expectation("error", msg2, msg1)
 }
 
 expect_runs <- function(expr){
