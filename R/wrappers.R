@@ -84,7 +84,8 @@ flagMask <- function(paired.end){
 #helper functions to set the right flag
 tlenFilter <- function(tlenFilter, paired.end){
   #No filtering if paired end is ignored
-  if (paired.end == "ignore") return(integer())
+#2017-03-17 Use tlenfilter even when paired.end="ignore"
+#  if (paired.end == "ignore") return(integer())
   #Default filter if tlenFilter is unset
   if (is.null(tlenFilter)) return(c(0,1000))
   #Check supplied tlenFilter
