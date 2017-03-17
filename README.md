@@ -10,16 +10,8 @@ Install the `devtools` package to be able to directly install R packages hosted 
 install.packages("devtools")
 ```
 
-To install `bamsignals` type:
+To install `bamsignals` from the `yourhighness` branch type:
 
 ```R
-devtools::install_github("lamortenera/bamsignals")
+devtools::install_github("lamortenera/bamsignals@yourhighness")
 ```
-
-Alternatively, you can install it from Bioconductor (the two repos are synchronized):
-
-```R
-source("http://bioconductor.org/biocLite.R")
-biocLite("bamsignals")
-```
-
