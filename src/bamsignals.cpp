@@ -1,8 +1,8 @@
 #include <Rcpp.h>
 #include <stdio.h>  
 #include <algorithm>
-#include "sam.h"
-#include "bgzf.h"
+#include "htslib/sam.h"
+#include "htslib/bgzf.h"
 
 //in C: true==1(or something different than 0), false==0
 using namespace Rcpp;
