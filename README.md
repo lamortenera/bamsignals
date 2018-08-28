@@ -19,7 +19,8 @@ devtools::install_github("lamortenera/bamsignals")
 Alternatively, you can install it from Bioconductor (the two repos are synchronized):
 
 ```R
-source("http://bioconductor.org/biocLite.R")
-biocLite("bamsignals")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("bamsignals")
 ```
 
