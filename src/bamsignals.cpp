@@ -496,6 +496,7 @@ List coverage_core(std::string bampath, RObject& gr, IntegerVector& tlen_filter,
 //this is used only for the tests right now...
 // [[Rcpp::export]]
 bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampath) {
+    int iorval;
     //streams
     samFile *in = 0, *out = 0;
 
@@ -513,12 +514,12 @@ bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampat
     if (out == 0) {  
         stop("Fail to open BAM file ." + bampath);  
     }
-    sam_hdr_write(out, header);
+    iorval = sam_hdr_write(out, header);
 
     //read sam and write to bam: adapted from sam_view.c:232-244
     bam1_t *b = bam_init1();
     while (sam_read1(in, header, b) >= 0) { // read one alignment from `in'
-        bam_write1(out->fp.bgzf, b); // write the alignment to `out'
+        iorval = bam_write1(out->fp.bgzf, b); // write the alignment to `out'
     }
     bam_destroy1(b);
 
@@ -527,7 +528,7 @@ bool writeSamAsBamAndIndex(const std::string& sampath, const std::string& bampat
     sam_close(out);
 
     //build the index
-    bam_index_build(bampath.c_str(), 0);
+    iorval = bam_index_build(bampath.c_str(), 0);
 
     return true;
 }
