@@ -1,8 +1,8 @@
 Package: bamsignals
 Type: Package
 Title: Extract read count signals from bam files
-Version: 1.17.2
-Date: 2019-10-22
+Version: 1.17.3
+Date: 2019-10-24
 Authors@R: c( person(given="Alessandro",family="Mammana",
         email="mammana@molgen.mpg.de", role=c("aut", "cre")),
         person(given="Johannes",family="Helmuth",
@@ -35,3 +35,5 @@ biocViews: DataImport, Sequencing, Coverage, Alignment
 VignetteBuilder: knitr
 NeedsCompilation: yes
 RoxygenNote: 5.0.1
+URL: https://github.com/lamortenera/bamsignals
+BugReports: https://github.com/lamortenera/bamsignals/issues
