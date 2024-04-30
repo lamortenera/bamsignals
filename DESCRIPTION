@@ -1,7 +1,7 @@
 Package: bamsignals
 Type: Package
 Title: Extract read count signals from bam files
-Version: 1.36.0
+Version: 1.37.0
 Date: 2021-11-16
 Authors@R: c( person(given="Alessandro",family="Mammana",
         email="mammana@molgen.mpg.de", role=c("aut", "cre")),
