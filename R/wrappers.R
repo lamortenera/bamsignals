@@ -8,7 +8,6 @@
 #' @import Rcpp
 #' @import IRanges
 #' @import GenomicRanges
-#' @import zlibbioc
 #' @import methods
 #' @import BiocGenerics
 #' @docType package

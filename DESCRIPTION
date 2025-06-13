@@ -1,8 +1,8 @@
 Package: bamsignals
 Type: Package
 Title: Extract read count signals from bam files
-Version: 1.41.0
-Date: 2021-11-16
+Version: 1.41.1
+Date: 2025-06-13
 Authors@R: c( person(given="Alessandro",family="Mammana",
         email="mammana@molgen.mpg.de", role=c("aut", "cre")),
         person(given="Johannes",family="Helmuth",
@@ -21,15 +21,14 @@ Imports:
     BiocGenerics,
     Rcpp (>= 0.10.6),
     IRanges,
-    GenomicRanges,
-    zlibbioc
+    GenomicRanges
 Suggests:
     testthat (>= 0.9),
     Rsamtools,
     BiocStyle,
     knitr,
     rmarkdown
-LinkingTo: Rcpp, Rhtslib (>= 1.13.1), zlibbioc
+LinkingTo: Rcpp, Rhtslib (>= 1.13.1)
 SystemRequirements: GNU make
 biocViews: DataImport, Sequencing, Coverage, Alignment
 VignetteBuilder: knitr
