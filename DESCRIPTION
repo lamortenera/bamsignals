@@ -21,15 +21,14 @@ Imports:
     BiocGenerics,
     Rcpp (>= 0.10.6),
     IRanges,
-    GenomicRanges,
-    zlibbioc
+    GenomicRanges
 Suggests:
     testthat (>= 0.9),
     Rsamtools,
     BiocStyle,
     knitr,
     rmarkdown
-LinkingTo: Rcpp, Rhtslib (>= 1.13.1), zlibbioc
+LinkingTo: Rcpp, Rhtslib (>= 1.13.1)
 SystemRequirements: GNU make
 biocViews: DataImport, Sequencing, Coverage, Alignment
 VignetteBuilder: knitr
