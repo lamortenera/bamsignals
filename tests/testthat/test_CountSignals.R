@@ -6,17 +6,6 @@ getSig <- function(i, ss){
 	else nums
 }
 
-runs <- function(expr){
-	res <- try(force(expr), TRUE)
-	msg1 <- "code did not generate an error"
-	msg2 <- "code generated an error"
-	expectation("error", msg2, msg1)
-}
-
-expect_runs <- function(expr){
-	expect_that(expr, runs, label=testthat:::find_expr("expr"))
-}
-
 test_that("Test CountSignals class and methods", {
 	for (ss in c(TRUE,FALSE)){
 		n <- new("CountSignals", signals=lapply(1:4, getSig, ss=ss), ss=ss)
@@ -28,10 +17,10 @@ test_that("Test CountSignals class and methods", {
 		expect_equal(width(n), rep(ifelse(ss, 2, 4), 4))
 		
 		#see if method show works
-		expect_runs(capture.output(show(n)))
+		expect_no_error(capture.output(show(n)))
 
 		#subsetting with zero elements
-		expect_runs(n[c()])
+		expect_no_error(n[c()])
 		
 		#negative indices
 		expect_error(n[-1])
