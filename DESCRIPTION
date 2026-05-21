@@ -36,4 +36,3 @@ NeedsCompilation: yes
 RoxygenNote: 5.0.1
 URL: https://github.com/lamortenera/bamsignals
 BugReports: https://github.com/lamortenera/bamsignals/issues
-PackageStatus: Deprecated
